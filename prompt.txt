@@ -1,0 +1,18 @@
+I have no coding experience.
+
+Build a simple design quiz web app using Next.js and Tailwind CSS.
+
+Use the Pages Router and show me the full code for:
+- pages/index.tsx
+- any supporting files needed for the quiz to work
+
+The app should:
+- Display a design question
+- Show two interface images side by side
+- Allow the user to select left or right
+- Show which answer is more correct and why
+- Include a “Next question” button
+
+Use placeholder images.
+Keep the UI minimal and editorial.
+Explain only what I need to run the app.

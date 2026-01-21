@@ -1,0 +1,108 @@
+Create a quiz data system for a design judgment game.
+
+The game tests a designer’s ability to evaluate interfaces and visual design.
+
+Use a data-driven approach.
+
+–––––––––––––––––
+DATA STRUCTURE
+–––––––––––––––––
+
+Create a data file (e.g. quizData.ts or quizData.json) with 20 total questions.
+
+Each question should follow this structure:
+
+{
+  id: number,
+  level: "beginner" | "mid",
+  category: "interface-comparison",
+  question: string,
+  promptContext: string,
+  leftImage: string,
+  rightImage: string,
+  correctAnswer: "left" | "right",
+  principlesTested: string[],
+  explanation: string
+}
+
+–––––––––––––––––
+DIFFICULTY DEFINITION
+–––––––––––––––––
+
+BEGINNER LEVEL (10 QUESTIONS)
+
+Beginner questions should:
+- Test obvious, foundational design principles
+- Have a clearly correct answer
+- Focus on visual clarity, not nuance
+- Avoid trade-offs
+
+Beginner principles include:
+- Visual hierarchy
+- Contrast
+- Alignment
+- Spacing
+- Readability
+- Primary vs secondary actions
+
+Beginner explanations should:
+- Be direct and instructional
+- Explicitly name the principle being applied
+- Explain what is working and what is not
+- Avoid subjective language
+
+Example beginner question intent:
+"Which interface has clearer visual hierarchy for a first-time user?"
+
+–––––––––––––––––
+
+MID LEVEL (10 QUESTIONS)
+
+Mid-level questions should:
+- Introduce trade-offs and nuance
+- Test contextual decision-making
+- Require understanding of user intent
+- Sometimes include two “good” designs, with one being more appropriate
+
+Mid-level principles include:
+- Information density
+- Progressive disclosure
+- Affordance
+- Consistency vs emphasis
+- Contextual hierarchy
+- Cognitive load
+
+Mid-level explanations should:
+- Acknowledge why the other option might seem correct
+- Explain why one choice is more appropriate for the given context
+- Focus on decision rationale, not absolute rules
+
+Example mid-level question intent:
+"Which interface better supports a returning user completing a task quickly?"
+
+–––––––––––––––––
+LOGIC REQUIREMENTS
+–––––––––––––––––
+
+Include logic-ready fields so the app can:
+- Filter questions by level
+- Track performance per level
+- Easily add future levels (e.g. advanced)
+
+Ensure:
+- Each level has balanced principles coverage
+- No repeated question framing
+- Image filenames are placeholders (e.g. /images/beginner-01-left.png)
+
+–––––––––––––––––
+OUTPUT
+–––––––––––––––––
+
+Generate:
+- The full quiz data file
+- 20 complete questions
+- Clear, principle-focused explanations
+- Clean, readable formatting
+
+Do not include UI code.
+Focus only on quiz content and structure.
