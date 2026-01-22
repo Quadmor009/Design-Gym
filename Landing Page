@@ -1,0 +1,45 @@
+Build a short, clean landing page for a product called “Design Gym”.
+
+Product summary:
+Design Gym is a practice platform where designers train their visual judgment.
+Users improve their design instincts by comparing interfaces, typography, and visual decisions.
+This is not theory or tutorials; it is practice.
+
+Audience:
+- Product designers
+- Visual designers
+- Design students
+
+Tone:
+- Calm, confident, editorial
+- Clear and serious, not hype-driven
+- Feels like a design institution, not a startup
+
+Page goals:
+- Clearly explain what Design Gym is in under 10 seconds
+- Make the value obvious without over-explaining
+- Encourage users to start practicing
+
+Page structure:
+1. Simple hero section with product name
+2. One clear value statement
+3. 3 short supporting points explaining how it works
+4. A single primary call-to-action
+
+CTA:
+“Start your Training”
+
+Design requirements:
+- Minimal layout
+- Strong typography
+- Generous spacing
+- Neutral color palette
+- No illustrations or icons
+- No animations
+
+Technical requirements:
+- Use Next.js and Tailwind CSS
+- Desktop-first layout
+- Accessible, readable text
+- Show full code for the page component
+- Explain only what I need to run or edit the page

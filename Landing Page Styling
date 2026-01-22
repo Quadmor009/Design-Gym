@@ -1,0 +1,45 @@
+Redesign the Design Gym landing page to feel more alive and energetic.
+
+Product context:
+Design Gym is a practice platform where designers sharpen their visual judgment through comparison-based challenges.
+It should feel active, creative, and motivating — like training for your eye.
+
+Tone:
+- Energetic but refined
+- Confident, modern, creative
+- Feels like a place designers want to return to
+
+Visual direction:
+- Introduce color intentionally (not just black and white)
+- Use bold typography for the hero
+- Add visual contrast and rhythm
+- Make the page feel dynamic, not static
+
+Imagery:
+- Use placeholder images or blocks for now
+- Suggest where interface screenshots or typographic visuals would live
+- Images should support learning and practice, not decoration
+
+Layout ideas:
+- Hero with strong headline + visual element
+- Split sections (text on one side, visual on the other)
+- Sections that alternate alignment to create movement
+- Clear visual flow from top to CTA
+
+CTA:
+- Still one primary CTA
+- CTA should feel motivating and active
+- Use color and scale to make it stand out
+
+Styling constraints:
+- Use Tailwind CSS
+- No heavy animations, but subtle motion is allowed (hover, transitions)
+- Avoid cheesy fitness metaphors or icons
+- Keep everything professional and design-forward
+
+Technical requirements:
+- Use Next.js and Tailwind CSS
+- Desktop-first
+- Show full code for the page component
+- Clearly mark where real images or screenshots can be swapped in later
+- Explain the visual decisions briefly
