@@ -48,7 +48,7 @@ export default function Home() {
           <div>
             <Link
               href="/quiz"
-              className="inline-block px-8 py-4 bg-black text-white text-lg font-normal hover:bg-gray-800 transition-colors"
+              className="inline-block px-8 py-4 bg-black text-white text-lg font-normal hover:bg-gray-800 transition-colors cursor-pointer"
             >
               Start your Training
             </Link>

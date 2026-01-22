@@ -56,9 +56,10 @@ export default function QuizContent() {
   const [showExplanation, setShowExplanation] = useState(false)
   const [showLevelCompleteModal, setShowLevelCompleteModal] = useState(false)
   const [completedLevel, setCompletedLevel] = useState<'beginner' | 'mid' | null>(null)
+  const [showInstructionModal, setShowInstructionModal] = useState(true)
   
-  // Scoring state - track points silently during quiz
-  const [score, setScore] = useState(0)
+  // Coin state - track coins silently during quiz
+  const [coins, setCoins] = useState(0)
   const [answeredQuestions, setAnsweredQuestions] = useState<Set<number>>(new Set())
 
   const currentQuestion = sessionQuestions[currentQuestionIndex]
@@ -74,10 +75,10 @@ export default function QuizContent() {
       setSelectedAnswer(side)
       setShowExplanation(true)
       
-      // Track score silently - add 100 points for correct answer (only once per question)
+      // Track coins silently - add 100 coins for correct answer (only once per question)
       const isCorrect = side === currentQuestion.correctAnswer
       if (isCorrect && !answeredQuestions.has(currentQuestionIndex)) {
-        setScore(prevScore => prevScore + 100)
+        setCoins(prevCoins => prevCoins + 100)
         setAnsweredQuestions(prev => new Set(prev).add(currentQuestionIndex))
       } else if (!isCorrect && !answeredQuestions.has(currentQuestionIndex)) {
         // Mark question as answered even if incorrect (to prevent double counting)
@@ -107,10 +108,10 @@ export default function QuizContent() {
     setShowExplanation(false)
   }
 
-  // Calculate total possible points and accuracy
+  // Calculate max coins and accuracy
   const totalQuestions = sessionQuestions.length
-  const totalPossiblePoints = totalQuestions * 100
-  const accuracy = totalQuestions > 0 ? Math.round((score / totalPossiblePoints) * 100) : 0
+  const maxCoins = totalQuestions * 100
+  const accuracy = totalQuestions > 0 ? Math.round((coins / maxCoins) * 100) : 0
 
   const handleProceedToNextLevel = () => {
     setShowLevelCompleteModal(false)
@@ -119,7 +120,7 @@ export default function QuizContent() {
     if (isLastQuestion) {
       // Reset quiz completely if we completed the entire quiz
       setCurrentQuestionIndex(0)
-      setScore(0)
+      setCoins(0)
       setAnsweredQuestions(new Set())
     } else {
       // Move to next question
@@ -129,10 +130,24 @@ export default function QuizContent() {
     setShowExplanation(false)
   }
 
+  const handleStartOver = () => {
+    setShowLevelCompleteModal(false)
+    setCompletedLevel(null)
+    setCurrentQuestionIndex(0)
+    setCoins(0)
+    setAnsweredQuestions(new Set())
+    setSelectedAnswer(null)
+    setShowExplanation(false)
+  }
+
+  const handleStartTraining = () => {
+    setShowInstructionModal(false)
+  }
+
   const handleShareOnTwitter = () => {
     const siteUrl = typeof window !== 'undefined' ? window.location.origin : ''
     const tweetText = `Just trained my design instincts at Design Gym
-Score: ${score} / ${totalPossiblePoints}
+Coins: ${coins} / ${maxCoins}
 Accuracy: ${accuracy}% 
 
 Train your eye → ${siteUrl}`
@@ -176,14 +191,23 @@ Train your eye → ${siteUrl}`
         <meta name="description" content="Practice your visual judgment" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
+
       <main className="min-h-screen bg-white px-6 py-12 md:px-12 md:py-16">
+        {/* Fixed coin counter at top-right */}
+        <div className="fixed top-12 right-12 z-10">
+          <div className="text-sm font-medium text-gray-700 border border-gray-300 bg-white px-4 py-2 rounded flex items-center gap-1.5">
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="12" cy="12" r="10" fill="#F59E0B" stroke="#D97706" strokeWidth="1.5"/>
+              <circle cx="12" cy="12" r="6" fill="#FCD34D" opacity="0.6"/>
+              <path d="M12 8C9.79 8 8 9.79 8 12C8 14.21 9.79 16 12 16C14.21 16 16 14.21 16 12C16 9.79 14.21 8 12 8Z" fill="#F59E0B" opacity="0.3"/>
+            </svg>
+            {coins}
+          </div>
+        </div>
         <div className="max-w-6xl mx-auto">
           <div className="mb-12 text-center">
             <div className="text-xl md:text-2xl font-medium text-black mb-4 tracking-normal" style={{ fontFamily: 'Inter, system-ui, -apple-system, sans-serif', letterSpacing: '0.02em' }}>
               Design Gym
-            </div>
-            <div className="text-lg font-medium text-black mb-6">
-              Score: {score} / {totalPossiblePoints}
             </div>
             <div className="mb-4">
               <div className="text-sm text-gray-500 mb-2">
@@ -247,7 +271,7 @@ Train your eye → ${siteUrl}`
               {selectedAnswer === 'left' && (
                 <div className={`p-4 text-center font-medium ${isCorrect ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'
                   }`}>
-                  {isCorrect ? '✓ Correct +100 points' : '✗ Your choice'}
+                  {isCorrect ? '✓ Correct +100 coins' : '✗ Your choice'}
                 </div>
               )}
             </div>
@@ -294,7 +318,7 @@ Train your eye → ${siteUrl}`
               {selectedAnswer === 'right' && (
                 <div className={`p-4 text-center font-medium ${isCorrect ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'
                   }`}>
-                  {isCorrect ? '✓ Correct +100 points' : '✗ Your choice'}
+                  {isCorrect ? '✓ Correct +100 coins' : '✗ Your choice'}
                 </div>
               )}
             </div>
@@ -320,6 +344,49 @@ Train your eye → ${siteUrl}`
           )}
         </div>
       </main>
+
+      {/* Instruction Modal - appears over first question */}
+      {showInstructionModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-8 max-w-lg mx-4 rounded-lg shadow-lg max-h-[90vh] overflow-y-auto">
+            <h2 className="text-2xl font-normal mb-6 text-center text-gray-900">
+              How Design Gym Works
+            </h2>
+            
+            <div className="space-y-6 mb-8">
+              <div>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">Choose</h3>
+                <p className="text-gray-700 leading-relaxed">
+                  You'll see two designs. Pick the one that communicates more clearly.
+                </p>
+              </div>
+              
+              <div>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">Compare</h3>
+                <p className="text-gray-700 leading-relaxed">
+                  After answering, press and hold to compare both designs.
+                </p>
+              </div>
+              
+              <div>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">Earn</h3>
+                <p className="text-gray-700 leading-relaxed">
+                  Each correct answer earns 100 coins.
+                </p>
+              </div>
+            </div>
+            
+            <div className="text-center">
+              <button
+                onClick={handleStartTraining}
+                className="px-8 py-3 bg-black text-white font-normal hover:bg-gray-800 transition-colors"
+              >
+                Start training
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Level Complete Modal */}
       {showLevelCompleteModal && (
@@ -348,31 +415,31 @@ Train your eye → ${siteUrl}`
                   Quiz Complete
                 </h2>
                 <div className="mb-6 text-center">
-                  <div className="text-4xl font-normal mb-2 text-gray-900">
-                    {score} / {totalPossiblePoints}
+                  <div className="text-base text-gray-700 mb-2">
+                    Coins: {coins} / {maxCoins}
                   </div>
                   <div className="text-lg text-gray-600 mb-4">
-                    {accuracy}% accuracy
+                    Accuracy: {accuracy}% accuracy
                   </div>
                   <div className="text-base text-gray-700">
-                    {getFeedback(accuracy)}
+                    Feedback: {getFeedback(accuracy)}
                   </div>
                 </div>
-                <div className="text-center space-y-3">
+                <div className="flex gap-3">
                   <button
                     onClick={handleShareOnTwitter}
-                    className="block w-full px-8 py-3 bg-blue-500 text-white font-normal hover:bg-blue-600 transition-colors"
+                    className="w-1/2 px-8 py-3 bg-blue-500 text-white font-normal hover:bg-blue-600 transition-colors whitespace-nowrap flex items-center justify-center gap-2"
                   >
-                    Share on Twitter
+                    <svg className="w-7 h-7 fill-current" viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                    </svg>
+                    Share on X
                   </button>
                   <button
-                    onClick={() => {
-                      handleShareOnTwitter()
-                      handleProceedToNextLevel()
-                    }}
-                    className="block w-full px-8 py-3 bg-black text-white font-normal hover:bg-gray-800 transition-colors"
+                    onClick={handleStartOver}
+                    className="w-1/2 px-8 py-3 bg-black text-white font-normal hover:bg-gray-800 transition-colors whitespace-nowrap"
                   >
-                    Share Scores
+                    Start Over
                   </button>
                 </div>
               </>
