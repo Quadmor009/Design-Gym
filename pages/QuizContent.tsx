@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Head from 'next/head'
 import { questions, foxQuote, Question } from '../data/quizData'
 
@@ -61,6 +61,7 @@ export default function QuizContent() {
   // Coin state - track coins silently during quiz
   const [coins, setCoins] = useState(0)
   const [answeredQuestions, setAnsweredQuestions] = useState<Set<number>>(new Set())
+  const [isCoinAnimating, setIsCoinAnimating] = useState(false)
 
   const currentQuestion = sessionQuestions[currentQuestionIndex]
   const isLastQuestion = currentQuestionIndex === sessionQuestions.length - 1
@@ -78,8 +79,14 @@ export default function QuizContent() {
       // Track coins silently - add 100 coins for correct answer (only once per question)
       const isCorrect = side === currentQuestion.correctAnswer
       if (isCorrect && !answeredQuestions.has(currentQuestionIndex)) {
-        setCoins(prevCoins => prevCoins + 100)
         setAnsweredQuestions(prev => new Set(prev).add(currentQuestionIndex))
+        setCoins(prevCoins => prevCoins + 100)
+        // Trigger coin bounce animation
+        setIsCoinAnimating(true)
+        // Remove animation class after animation completes (400ms)
+        setTimeout(() => {
+          setIsCoinAnimating(false)
+        }, 400)
       } else if (!isCorrect && !answeredQuestions.has(currentQuestionIndex)) {
         // Mark question as answered even if incorrect (to prevent double counting)
         setAnsweredQuestions(prev => new Set(prev).add(currentQuestionIndex))
@@ -196,7 +203,14 @@ Train your eye → ${siteUrl}`
         {/* Fixed coin counter at top-right */}
         <div className="fixed top-12 right-12 z-10">
           <div className="text-sm font-medium text-gray-700 border border-gray-300 bg-white px-4 py-2 rounded flex items-center gap-1.5">
-            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <svg 
+              key={`coin-${coins}`}
+              className={`w-4 h-4 ${isCoinAnimating ? 'coin-animate' : ''}`}
+              style={{ transformOrigin: 'center', display: 'inline-block' }}
+              viewBox="0 0 24 24" 
+              fill="none" 
+              xmlns="http://www.w3.org/2000/svg"
+            >
               <circle cx="12" cy="12" r="10" fill="#F59E0B" stroke="#D97706" strokeWidth="1.5"/>
               <circle cx="12" cy="12" r="6" fill="#FCD34D" opacity="0.6"/>
               <path d="M12 8C9.79 8 8 9.79 8 12C8 14.21 9.79 16 12 16C14.21 16 16 14.21 16 12C16 9.79 14.21 8 12 8Z" fill="#F59E0B" opacity="0.3"/>
