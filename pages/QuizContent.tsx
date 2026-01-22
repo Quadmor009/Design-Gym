@@ -1,15 +1,22 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import Head from 'next/head'
 import { questions, foxQuote, Question } from '../data/quizData'
 
-// Configuration for questions per level - easy to adjust for future expansion
-const QUESTIONS_PER_LEVEL: Record<'beginner' | 'mid', number> = {
-  beginner: 5,
-  mid: 7,
+// Configuration for questions per level - never show all questions
+const QUESTIONS_PER_LEVEL: Record<'beginner' | 'mid' | 'expert', number> = {
+  beginner: 5, // Show 5 out of 20 beginner questions
+  mid: 7, // Show 7 out of 20 mid questions
+  expert: 8, // Show 8 out of 20 expert questions
+}
+
+// Required pool composition - validate that pools meet these requirements
+const REQUIRED_POOL_COMPOSITION: Record<'beginner' | 'mid' | 'expert', { image: number; typeface: number }> = {
+  beginner: { image: 15, typeface: 5 },
+  mid: { image: 12, typeface: 8 },
+  expert: { image: 13, typeface: 7 }
 }
 
 // Helper function to shuffle an array (Fisher-Yates algorithm)
-// This ensures each session feels different and unpredictable
 function shuffleArray<T>(array: T[]): T[] {
   const shuffled = [...array]
   for (let i = shuffled.length - 1; i > 0; i--) {
@@ -19,43 +26,122 @@ function shuffleArray<T>(array: T[]): T[] {
   return shuffled
 }
 
+// Validate that all questions have explicit difficulty fields
+function validateQuestions(questions: Question[]): void {
+  const missingDifficulty = questions.filter(q => !q.difficulty)
+  if (missingDifficulty.length > 0) {
+    throw new Error(
+      `CRITICAL: ${missingDifficulty.length} question(s) are missing explicit difficulty field. ` +
+      `Questions must explicitly define difficulty: "beginner" | "mid" | "expert". ` +
+      `Missing difficulty in questions: ${missingDifficulty.map(q => q.id).join(', ')}`
+    )
+  }
+}
+
+// Validate that difficulty pools meet required composition
+function validatePoolComposition(
+  difficulty: 'beginner' | 'mid' | 'expert',
+  imageQuestions: Question[],
+  typefaceQuestions: Question[]
+): void {
+  const required = REQUIRED_POOL_COMPOSITION[difficulty]
+  const actualImage = imageQuestions.length
+  const actualTypeface = typefaceQuestions.length
+  
+  if (actualImage !== required.image || actualTypeface !== required.typeface) {
+    throw new Error(
+      `CRITICAL: ${difficulty} difficulty pool does not meet required composition. ` +
+      `Required: ${required.image} image, ${required.typeface} typeface. ` +
+      `Actual: ${actualImage} image, ${actualTypeface} typeface. ` +
+      `Difficulty must be explicitly defined in question data - do not infer from filenames, IDs, or indexes.`
+    )
+  }
+}
+
 // Select and randomize questions from all levels
-// This function runs only once when the quiz session starts
-// It combines questions from each level according to QUESTIONS_PER_LEVEL config
+// STRICT RULES: Filter by explicit difficulty field only - never infer from filenames, IDs, or indexes
 function getRandomizedQuestions(): Question[] {
+  // First, validate all questions have explicit difficulty
+  validateQuestions(questions)
+  
   const selectedQuestions: Question[] = []
   
-  // Process each level in order: beginner first, then mid
-  for (const level of ['beginner', 'mid'] as const) {
-    // Filter questions by level
-    const levelQuestions = questions.filter(q => q.level === level)
+  // Process each level in order: beginner, mid, expert
+  for (const level of ['beginner', 'mid', 'expert'] as const) {
+    // STEP 1: Filter questions by explicit difficulty field ONLY
+    // This is the ONLY source of truth - do NOT infer from filenames, IDs, or indexes
+    const levelQuestions = questions.filter(q => {
+      if (!q.difficulty) {
+        throw new Error(
+          `CRITICAL: Question ${q.id} is missing explicit difficulty field. ` +
+          `Every question must explicitly define difficulty: "beginner" | "mid" | "expert"`
+        )
+      }
+      return q.difficulty === level
+    })
     
-    // Shuffle the questions for this level
-    const shuffled = shuffleArray(levelQuestions)
+    // STEP 2: Split by type within this difficulty pool
+    const imageQuestions = levelQuestions.filter(q => q.type === 'image')
+    const typefaceQuestions = levelQuestions.filter(q => q.type === 'typeface')
     
-    // Select the required number of questions for this level
+    // STEP 3: Validate pool composition matches requirements
+    validatePoolComposition(level, imageQuestions, typefaceQuestions)
+    
+    // STEP 4: Shuffle within each type pool
+    const shuffledImage = shuffleArray(imageQuestions)
+    const shuffledTypeface = shuffleArray(typefaceQuestions)
+    
+    // STEP 5: Select required number from this difficulty level
+    // (Selection is random - doesn't need to maintain image/typeface ratio)
+    const allShuffled = shuffleArray([...shuffledImage, ...shuffledTypeface])
     const count = QUESTIONS_PER_LEVEL[level]
-    const selected = shuffled.slice(0, count)
     
+    if (allShuffled.length < count) {
+      throw new Error(
+        `CRITICAL: ${level} difficulty pool has only ${allShuffled.length} questions, ` +
+        `but ${count} are required for selection.`
+      )
+    }
+    
+    const selected = allShuffled.slice(0, count)
     selectedQuestions.push(...selected)
   }
   
-  // Return questions in order: beginner first (5 questions), then mid (7 questions)
-  // No final shuffle - keep levels separate
-  return selectedQuestions
+  // STEP 6: Merge and shuffle final list
+  return shuffleArray(selectedQuestions)
+}
+
+// Shuffle answer options at render time
+// Returns shuffled options with the correct answer position tracked
+// Since optionA is always correct (from "-a" variant), we track where it ends up
+function shuffleOptions(optionA: string, optionB: string, correctOption: "A") {
+  const options = [
+    { value: optionA, isCorrect: true },
+    { value: optionB, isCorrect: false }
+  ]
+  const shuffled = shuffleArray(options)
+  
+  // Determine which position (left or right) has the correct answer
+  const leftIsCorrect = shuffled[0].isCorrect
+  const correctAnswer = leftIsCorrect ? 'left' : 'right'
+  
+  return {
+    leftOption: shuffled[0].value,
+    rightOption: shuffled[1].value,
+    correctAnswer: correctAnswer
+  }
 }
 
 export default function QuizContent() {
   // Initialize randomized questions only once using function initializer
   // This prevents reshuffling on re-render
-  // Each session will have: 5 beginner + 7 mid = 12 total questions
   const [sessionQuestions] = useState<Question[]>(() => getRandomizedQuestions())
   
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [selectedAnswer, setSelectedAnswer] = useState<'left' | 'right' | null>(null)
   const [showExplanation, setShowExplanation] = useState(false)
   const [showLevelCompleteModal, setShowLevelCompleteModal] = useState(false)
-  const [completedLevel, setCompletedLevel] = useState<'beginner' | 'mid' | null>(null)
+  const [completedLevel, setCompletedLevel] = useState<'beginner' | 'mid' | 'expert' | null>(null)
   const [showInstructionModal, setShowInstructionModal] = useState(true)
   
   // Coin state - track coins silently during quiz
@@ -64,20 +150,35 @@ export default function QuizContent() {
   const [isCoinAnimating, setIsCoinAnimating] = useState(false)
 
   const currentQuestion = sessionQuestions[currentQuestionIndex]
-  const isLastQuestion = currentQuestionIndex === sessionQuestions.length - 1
   
-  // Questions are ordered: first 5 are beginner (indices 0-4), next 7 are mid (indices 5-11)
-  const BEGINNER_QUESTIONS_COUNT = QUESTIONS_PER_LEVEL.beginner
-  const isLastBeginnerQuestion = currentQuestionIndex === BEGINNER_QUESTIONS_COUNT - 1
-  const isLastMidQuestion = currentQuestionIndex === sessionQuestions.length - 1
+  // Shuffle options at render time for each question
+  // This ensures options are randomly positioned each time
+  const shuffledOptions = useMemo(() => {
+    if (!currentQuestion) return null
+    return shuffleOptions(
+      currentQuestion.optionA,
+      currentQuestion.optionB,
+      currentQuestion.correctOption
+    )
+  }, [currentQuestion])
+
+  // Check if we're at specific question numbers for level transitions
+  // Question 5 (index 4) = end of beginner, start of mid
+  // Question 12 (index 11) = end of mid, start of expert
+  const isAfterQuestion5 = currentQuestionIndex === 4 // After answering question 5
+  const isAfterQuestion12 = currentQuestionIndex === 11 // After answering question 12
+  const isLastQuestion = currentQuestionIndex === sessionQuestions.length - 1
 
   const handleSelect = (side: 'left' | 'right') => {
-    if (!showExplanation && currentQuestion) {
+    if (!showExplanation && currentQuestion && shuffledOptions) {
       setSelectedAnswer(side)
       setShowExplanation(true)
       
+      // Determine if the selected answer is correct
+      // The correct answer position is tracked in shuffledOptions.correctAnswer
+      const isCorrect = side === shuffledOptions.correctAnswer
+      
       // Track coins silently - add 100 coins for correct answer (only once per question)
-      const isCorrect = side === currentQuestion.correctAnswer
       if (isCorrect && !answeredQuestions.has(currentQuestionIndex)) {
         setAnsweredQuestions(prev => new Set(prev).add(currentQuestionIndex))
         setCoins(prevCoins => prevCoins + 100)
@@ -95,16 +196,23 @@ export default function QuizContent() {
   }
 
   const handleNext = () => {
-    // Check if we just completed the beginner level (after question 5, index 4)
-    if (isLastBeginnerQuestion) {
+    // Check if we just completed question 5 (beginner level complete)
+    if (isAfterQuestion5) {
       setCompletedLevel('beginner')
       setShowLevelCompleteModal(true)
       return
     }
     
-    // Check if we just completed the mid level (after question 12, index 11)
-    if (isLastMidQuestion) {
+    // Check if we just completed question 12 (mid level complete)
+    if (isAfterQuestion12) {
       setCompletedLevel('mid')
+      setShowLevelCompleteModal(true)
+      return
+    }
+    
+    // Check if we just completed the last question (expert level complete)
+    if (isLastQuestion) {
+      setCompletedLevel('expert')
       setShowLevelCompleteModal(true)
       return
     }
@@ -172,11 +280,21 @@ Train your eye → ${siteUrl}`
     return 'Needs practice'
   }
 
-  // Only calculate isCorrect if we have both a selected answer and a current question
-  const isCorrect = currentQuestion && selectedAnswer !== null ? selectedAnswer === currentQuestion.correctAnswer : false
+  // Get color for accuracy display
+  // Orange for Solid (50-79), Green for Strong (>=80), Red for Needs practice (<50)
+  const getAccuracyColor = (accuracy: number): string => {
+    if (accuracy >= 80) return 'text-green-600' // Strong - Green
+    if (accuracy >= 50) return 'text-orange-600' // Solid - Orange
+    return 'text-red-600' // Needs practice - Red
+  }
+
+  // Determine if the selected answer is correct
+  const isCorrect = currentQuestion && selectedAnswer !== null && shuffledOptions
+    ? selectedAnswer === shuffledOptions.correctAnswer
+    : false
 
   // Safety check: if no current question, show loading or error state
-  if (!currentQuestion) {
+  if (!currentQuestion || !shuffledOptions) {
     return (
       <>
         <Head>
@@ -190,6 +308,10 @@ Train your eye → ${siteUrl}`
       </>
     )
   }
+
+  // Determine which option is correct for visual feedback
+  const leftIsCorrect = shuffledOptions.correctAnswer === 'left'
+  const rightIsCorrect = shuffledOptions.correctAnswer === 'right'
 
   return (
     <>
@@ -238,43 +360,45 @@ Train your eye → ${siteUrl}`
 
           <div className="mb-12">
             <h2 className="text-xl md:text-2xl font-normal text-center mb-8 text-gray-900">
-              {currentQuestion.question}
+              {currentQuestion.type === 'image' 
+                ? currentQuestion.prompt 
+                : currentQuestion.prompt}
             </h2>
           </div>
 
           <div className="grid md:grid-cols-2 gap-6 mb-12">
             <div
               onClick={() => handleSelect('left')}
-              className={`cursor-pointer transition-all relative group ${currentQuestion.type === 'font'
+              className={`cursor-pointer transition-all relative group ${currentQuestion.type === 'typeface'
                   ? ''
                   : `border-2 ${selectedAnswer === 'left'
                     ? isCorrect
                       ? 'border-green-500'
                       : 'border-red-500'
-                    : showExplanation && currentQuestion.correctAnswer === 'left'
+                    : showExplanation && leftIsCorrect
                       ? 'border-green-500'
                       : 'border-gray-200 hover:border-gray-400'
                   }`
                 }`}
             >
-              {currentQuestion.type === 'font' ? (
+              {currentQuestion.type === 'typeface' ? (
                 <div
                   className={`p-8 min-h-[300px] flex items-center justify-center bg-white transition-transform ${!showExplanation ? 'group-hover:scale-[1.02]' : ''
                     }`}
-                  style={{ fontFamily: currentQuestion.leftFont }}
+                  style={{ fontFamily: shuffledOptions.leftOption }}
                 >
                   <p className="text-3xl leading-relaxed text-center">
                     {foxQuote}
                   </p>
                 </div>
-              ) : currentQuestion.leftImage ? (
+              ) : (
                 <img
-                  src={currentQuestion.leftImage}
-                  alt="Design option A"
+                  src={shuffledOptions.leftOption}
+                  alt="Design option"
                   className={`w-full h-auto transition-transform ${!showExplanation ? 'group-hover:scale-[1.02]' : ''
                     }`}
                 />
-              ) : null}
+              )}
               {!showExplanation && (
                 <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all duration-200 flex items-start justify-center pt-4">
                   <span className="text-white font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-200">
@@ -292,36 +416,36 @@ Train your eye → ${siteUrl}`
 
             <div
               onClick={() => handleSelect('right')}
-              className={`cursor-pointer transition-all relative group ${currentQuestion.type === 'font'
+              className={`cursor-pointer transition-all relative group ${currentQuestion.type === 'typeface'
                   ? ''
                   : `border-2 ${selectedAnswer === 'right'
                     ? isCorrect
                       ? 'border-green-500'
                       : 'border-red-500'
-                    : showExplanation && currentQuestion.correctAnswer === 'right'
+                    : showExplanation && rightIsCorrect
                       ? 'border-green-500'
                       : 'border-gray-200 hover:border-gray-400'
                   }`
                 }`}
             >
-              {currentQuestion.type === 'font' ? (
+              {currentQuestion.type === 'typeface' ? (
                 <div
                   className={`p-8 min-h-[300px] flex items-center justify-center bg-white transition-transform ${!showExplanation ? 'group-hover:scale-[1.02]' : ''
                     }`}
-                  style={{ fontFamily: currentQuestion.rightFont }}
+                  style={{ fontFamily: shuffledOptions.rightOption }}
                 >
                   <p className="text-3xl leading-relaxed text-center">
                     {foxQuote}
                   </p>
                 </div>
-              ) : currentQuestion.rightImage ? (
+              ) : (
                 <img
-                  src={currentQuestion.rightImage}
-                  alt="Design option B"
+                  src={shuffledOptions.rightOption}
+                  alt="Design option"
                   className={`w-full h-auto transition-transform ${!showExplanation ? 'group-hover:scale-[1.02]' : ''
                     }`}
                 />
-              ) : null}
+              )}
               {!showExplanation && (
                 <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all duration-200 flex items-start justify-center pt-4">
                   <span className="text-white font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-200">
@@ -409,7 +533,7 @@ Train your eye → ${siteUrl}`
             {completedLevel === 'beginner' ? (
               <>
                 <h2 className="text-2xl font-normal mb-4 text-center">
-                  Easy Level Complete!
+                  Beginner Level Complete!
                 </h2>
                 <p className="text-gray-700 mb-6 text-center leading-relaxed">
                   Great job completing the beginner level! Ready to move on to the intermediate level?
@@ -425,18 +549,45 @@ Train your eye → ${siteUrl}`
               </>
             ) : completedLevel === 'mid' ? (
               <>
+                <h2 className="text-2xl font-normal mb-4 text-center">
+                  Intermediate Level Complete!
+                </h2>
+                <p className="text-gray-700 mb-6 text-center leading-relaxed">
+                  Excellent work! Ready to move on to the expert level?
+                </p>
+                <div className="text-center">
+                  <button
+                    onClick={handleProceedToNextLevel}
+                    className="px-8 py-3 bg-black text-white font-normal hover:bg-gray-800 transition-colors"
+                  >
+                    Continue to Next Level
+                  </button>
+                </div>
+              </>
+            ) : completedLevel === 'expert' ? (
+              <>
                 <h2 className="text-2xl font-normal mb-6 text-center">
                   Quiz Complete
                 </h2>
                 <div className="mb-6 text-center">
-                  <div className="text-base text-gray-700 mb-2">
-                    Coins: {coins} / {maxCoins}
+                  <div className="text-base text-gray-700 mb-4 flex items-center justify-center gap-2">
+                    <svg 
+                      className="w-5 h-5"
+                      viewBox="0 0 24 24" 
+                      fill="none" 
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <circle cx="12" cy="12" r="10" fill="#F59E0B" stroke="#D97706" strokeWidth="1.5"/>
+                      <circle cx="12" cy="12" r="6" fill="#FCD34D" opacity="0.6"/>
+                      <path d="M12 8C9.79 8 8 9.79 8 12C8 14.21 9.79 16 12 16C14.21 16 16 14.21 16 12C16 9.79 14.21 8 12 8Z" fill="#F59E0B" opacity="0.3"/>
+                    </svg>
+                    <span>Coins: {coins}</span>
                   </div>
-                  <div className="text-lg text-gray-600 mb-4">
-                    Accuracy: {accuracy}% accuracy
+                  <div className={`text-2xl font-medium mb-2 ${getAccuracyColor(accuracy)}`}>
+                    Accuracy: {accuracy}%
                   </div>
                   <div className="text-base text-gray-700">
-                    Feedback: {getFeedback(accuracy)}
+                    {getFeedback(accuracy)}
                   </div>
                 </div>
                 <div className="flex gap-3">
@@ -464,4 +615,3 @@ Train your eye → ${siteUrl}`
     </>
   )
 }
-

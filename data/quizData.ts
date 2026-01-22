@@ -1,281 +1,628 @@
 export interface Question {
-  id: number
-  level: "beginner" | "mid"
-  category: "interface-comparison" | "font-identification"
-  question: string
-  promptContext?: string
-  leftImage?: string
-  rightImage?: string
-  leftFont?: string
-  rightFont?: string
-  correctAnswer: "left" | "right"
-  principlesTested: string[]
+  id: string
+  difficulty: "beginner" | "mid" | "expert"
+  type: "image" | "typeface"
+  prompt: string
+  optionA: string
+  optionB: string
+  correctOption: "A"
   explanation: string
-  type?: 'design' | 'font'
 }
 
 export const foxQuote = "The quick brown fox jumps over the lazy dog."
 
 export const questions: Question[] = [
-  // BEGINNER LEVEL QUESTIONS (1-10)
+  // BEGINNER LEVEL - IMAGE QUESTIONS (15 total)
   {
-    id: 1,
-    level: "beginner",
-    category: "interface-comparison",
-    question: "Which button design has better visual contrast?",
-    promptContext: "A user needs to identify the primary action on a form.",
-    leftImage: "https://picsum.photos/seed/beginner-01-left/400/300",
-    rightImage: "https://picsum.photos/seed/beginner-01-right/400/300",
-    correctAnswer: "right",
-    principlesTested: ["contrast", "visual hierarchy"],
-    explanation: "The right option uses higher contrast between the button and background, making it easier to distinguish as the primary action. Strong contrast is essential for accessibility and visual clarity.",
-    type: 'design'
+    id: "layout-beg-q1",
+    difficulty: "beginner",
+    type: "image",
+    prompt: "Which of these images is most correct?",
+    optionA: "/layout-beg-q1-a.png",
+    optionB: "/layout-beg-q1-b.png",
+    correctOption: "A",
+    explanation: "The correct option demonstrates better layout structure with proper organization of elements. Good layout creates visual order and improves usability."
   },
   {
-    id: 2,
-    level: "beginner",
-    category: "interface-comparison",
-    question: "Which layout has better text alignment?",
-    promptContext: "Comparing two text-heavy interfaces for readability.",
-    leftImage: "https://picsum.photos/seed/beginner-02-left/400/300",
-    rightImage: "https://picsum.photos/seed/beginner-02-right/400/300",
-    correctAnswer: "left",
-    principlesTested: ["alignment", "readability"],
-    explanation: "The left option shows consistent alignment with text properly left-aligned and elements aligned to a grid. Poor alignment creates visual chaos and reduces readability.",
-    type: 'design'
+    id: "contrast-beg-q2",
+    difficulty: "beginner",
+    type: "image",
+    prompt: "Which of these images is most correct?",
+    optionA: "/contrast-beg-q2-a.png",
+    optionB: "/contrast-beg-q2-b.png",
+    correctOption: "A",
+    explanation: "The correct option uses appropriate contrast between elements, making important information stand out clearly. Strong contrast improves readability and visual hierarchy."
   },
   {
-    id: 3,
-    level: "beginner",
-    category: "interface-comparison",
-    question: "Which interface uses spacing more effectively?",
-    promptContext: "Evaluating white space usage in a dashboard layout.",
-    leftImage: "https://picsum.photos/seed/beginner-03-left/400/300",
-    rightImage: "https://picsum.photos/seed/beginner-03-right/400/300",
-    correctAnswer: "right",
-    principlesTested: ["spacing", "visual hierarchy"],
-    explanation: "The right option provides adequate spacing between elements, making the interface easier to scan and reducing visual clutter. Proper spacing is fundamental to good design.",
-    type: 'design'
+    id: "contrast-beg-q3",
+    difficulty: "beginner",
+    type: "image",
+    prompt: "Which of these images is most correct?",
+    optionA: "/contrast-beg-q3-a.png",
+    optionB: "/contrast-beg-q3-b.png",
+    correctOption: "A",
+    explanation: "The correct option demonstrates better contrast usage, ensuring text and interactive elements are clearly distinguishable from the background."
   },
   {
-    id: 4,
-    level: "beginner",
-    category: "font-identification",
-    question: "Which typeface belongs to the serif family?",
-    leftFont: "'Arial', sans-serif",
-    rightFont: "'Times New Roman', serif",
-    correctAnswer: "right",
-    principlesTested: ["typography fundamentals"],
-    explanation: "Times New Roman is a serif typeface, characterized by small decorative strokes (serifs) at the ends of letters. Arial is a sans-serif typeface without these decorative elements.",
-    type: 'font'
+    id: "color-beg-q4",
+    difficulty: "beginner",
+    type: "image",
+    prompt: "Which of these images is most correct?",
+    optionA: "/color-beg-q4-a.png",
+    optionB: "/color-beg-q4-b.png",
+    correctOption: "A",
+    explanation: "The correct option uses color more effectively to communicate meaning and create visual hierarchy. Appropriate color choices enhance usability and aesthetics."
   },
   {
-    id: 5,
-    level: "beginner",
-    category: "interface-comparison",
-    question: "Which design has clearer visual hierarchy?",
-    promptContext: "A landing page needs to guide users to the main call-to-action.",
-    leftImage: "https://picsum.photos/seed/beginner-05-left/400/300",
-    rightImage: "https://picsum.photos/seed/beginner-05-right/400/300",
-    correctAnswer: "right",
-    principlesTested: ["visual hierarchy", "readability"],
-    explanation: "The right option establishes clear hierarchy through size, weight, and positioning. The most important element is most prominent, guiding the user's attention effectively.",
-    type: 'design'
+    id: "hierarchy-beg-q5",
+    difficulty: "beginner",
+    type: "image",
+    prompt: "Which of these images is most correct?",
+    optionA: "/hierarchy-beg-q5-a.png",
+    optionB: "/hierarchy-beg-q5-b.png",
+    correctOption: "A",
+    explanation: "The correct option establishes clearer visual hierarchy, guiding the user's attention to the most important elements first. Good hierarchy improves comprehension."
   },
   {
-    id: 6,
-    level: "beginner",
-    category: "interface-comparison",
-    question: "Which interface distinguishes primary from secondary actions better?",
-    promptContext: "A form with multiple action buttons.",
-    leftImage: "https://picsum.photos/seed/beginner-06-left/400/300",
-    rightImage: "https://picsum.photos/seed/beginner-06-right/400/300",
-    correctAnswer: "right",
-    principlesTested: ["primary vs secondary actions", "visual hierarchy"],
-    explanation: "The right option clearly differentiates the primary action through size, color, and styling, while secondary actions are visually de-emphasized. This prevents user confusion.",
-    type: 'design'
+    id: "color-beg-q6",
+    difficulty: "beginner",
+    type: "image",
+    prompt: "Which of these images is most correct?",
+    optionA: "/color-beg-q6-a.png",
+    optionB: "/color-beg-q6-b.png",
+    correctOption: "A",
+    explanation: "The correct option demonstrates better color application, using color strategically to support the design's purpose and improve user experience."
   },
   {
-    id: 7,
-    level: "beginner",
-    category: "interface-comparison",
-    question: "Which text has better readability?",
-    promptContext: "Body text in a blog post interface.",
-    leftImage: "https://picsum.photos/seed/beginner-07-left/400/300",
-    rightImage: "https://picsum.photos/seed/beginner-07-right/400/300",
-    correctAnswer: "left",
-    principlesTested: ["readability", "contrast"],
-    explanation: "The left option uses appropriate font size, line height, and contrast for body text. The text is easy to read and doesn't strain the eyes, which is essential for content consumption.",
-    type: 'design'
+    id: "color-beg-q7",
+    difficulty: "beginner",
+    type: "image",
+    prompt: "Which of these images is most correct?",
+    optionA: "/color-beg-q7-a.png",
+    optionB: "/color-beg-q7-b.png",
+    correctOption: "A",
+    explanation: "The correct option uses color more appropriately, ensuring sufficient contrast and meaningful color relationships that support the design's goals."
   },
   {
-    id: 8,
-    level: "beginner",
-    category: "font-identification",
-    question: "Which typeface is Poppins?",
-    leftFont: "'Helvetica', sans-serif",
-    rightFont: "'Poppins', sans-serif",
-    correctAnswer: "right",
-    principlesTested: ["typography fundamentals"],
-    explanation: "Poppins is a geometric sans-serif typeface designed by Indian Type Foundry. It features rounded letterforms and is widely used in modern web design.",
-    type: 'font'
+    id: "contrast-beg-q8",
+    difficulty: "beginner",
+    type: "image",
+    prompt: "Which of these images is most correct?",
+    optionA: "/contrast-beg-q8-a.png",
+    optionB: "/contrast-beg-q8-b.png",
+    correctOption: "A",
+    explanation: "The correct option provides better contrast between foreground and background elements, making content more readable and accessible."
   },
   {
-    id: 9,
-    level: "beginner",
-    category: "interface-comparison",
-    question: "Which layout has better element alignment?",
-    promptContext: "A card-based interface showing product information.",
-    leftImage: "https://picsum.photos/seed/beginner-09-left/400/300",
-    rightImage: "https://picsum.photos/seed/beginner-09-right/400/300",
-    correctAnswer: "left",
-    principlesTested: ["alignment", "visual clarity"],
-    explanation: "The left option demonstrates consistent alignment across all elements, creating a clean and organized appearance. Proper alignment is a foundational design principle.",
-    type: 'design'
+    id: "width thickness-beg-q9",
+    difficulty: "beginner",
+    type: "image",
+    prompt: "Which of these images is most correct?",
+    optionA: "/width thickness-beg-q9-a.png",
+    optionB: "/width thickness-beg-q9-b.png",
+    correctOption: "A",
+    explanation: "The correct option uses appropriate line weights and thicknesses that create clear visual distinctions between elements. Proper weight hierarchy improves clarity."
   },
   {
-    id: 10,
-    level: "beginner",
-    category: "interface-comparison",
-    question: "Which design uses contrast more effectively?",
-    promptContext: "An important notification banner in an application.",
-    leftImage: "https://picsum.photos/seed/beginner-10-left/400/300",
-    rightImage: "https://picsum.photos/seed/beginner-10-right/400/300",
-    correctAnswer: "right",
-    principlesTested: ["contrast", "visual hierarchy"],
-    explanation: "The right option uses strong contrast to make important information stand out. High contrast draws attention and ensures critical messages are noticed immediately.",
-    type: 'design'
+    id: "visual hierarchy-beg-q10",
+    difficulty: "beginner",
+    type: "image",
+    prompt: "Which of these images is most correct?",
+    optionA: "/visual hierarchy-beg-q10-a.png",
+    optionB: "/visual hierarchy-beg-q10-b.png",
+    correctOption: "A",
+    explanation: "The correct option establishes better visual hierarchy through size, weight, and positioning, making it easier for users to understand the content structure."
+  },
+  {
+    id: "alignment-beg-q11",
+    difficulty: "beginner",
+    type: "image",
+    prompt: "Which of these images is most correct?",
+    optionA: "/alignment-beg-q11-a.png",
+    optionB: "/alignment-beg-q11-b.png",
+    correctOption: "A",
+    explanation: "The correct option demonstrates better alignment of elements, creating visual order and making the interface appear more organized and professional."
+  },
+  {
+    id: "spacing-beg-q12",
+    difficulty: "beginner",
+    type: "image",
+    prompt: "Which of these images is most correct?",
+    optionA: "/spacing-beg-q12-a.png",
+    optionB: "/spacing-beg-q12-b.png",
+    correctOption: "A",
+    explanation: "The correct option uses spacing more effectively, providing adequate white space between elements to improve readability and visual clarity."
+  },
+  {
+    id: "spacing-beg-q13",
+    difficulty: "beginner",
+    type: "image",
+    prompt: "Which of these images is most correct?",
+    optionA: "/spacing-beg-q13-a.png",
+    optionB: "/spacing-beg-q13-b.png",
+    correctOption: "A",
+    explanation: "The correct option demonstrates better spacing relationships, creating appropriate visual rhythm and making the interface easier to scan and understand."
+  },
+  {
+    id: "copy-beg-q14",
+    difficulty: "beginner",
+    type: "image",
+    prompt: "Which of these images is most correct?",
+    optionA: "/copy-beg-q14-a.png",
+    optionB: "/copy-beg-q14-b.png",
+    correctOption: "A",
+    explanation: "The correct option presents copy more effectively, with better typography and layout that improves readability and user comprehension."
+  },
+  {
+    id: "contrast-beg-q15",
+    difficulty: "beginner",
+    type: "image",
+    prompt: "Which of these images is most correct?",
+    optionA: "/contrast-beg-q15-a.png",
+    optionB: "/contrast-beg-q15-b.png",
+    correctOption: "A",
+    explanation: "The correct option uses contrast more appropriately, ensuring that important elements stand out and the interface remains accessible and clear."
   },
 
-  // MID LEVEL QUESTIONS (11-20)
+  // BEGINNER LEVEL - TYPEFACE QUESTIONS (5 total)
+  // Focus: Font family recognition and right font for right use case
   {
-    id: 11,
-    level: "mid",
-    category: "interface-comparison",
-    question: "Which interface better supports a returning user completing a task quickly?",
-    promptContext: "A dashboard used daily by experienced users who need efficiency.",
-    leftImage: "https://picsum.photos/seed/mid-01-left/400/300",
-    rightImage: "https://picsum.photos/seed/mid-01-right/400/300",
-    correctAnswer: "left",
-    principlesTested: ["information density", "cognitive load", "contextual hierarchy"],
-    explanation: "The left option provides more information density and shortcuts that experienced users need. While it may seem cluttered to beginners, it reduces clicks for power users who have learned the interface.",
-    type: 'design'
+    id: "typeface-beg-q1",
+    difficulty: "beginner",
+    type: "typeface",
+    prompt: "Which typeface belongs to the serif family?",
+    optionA: "'Times New Roman', serif",
+    optionB: "'Arial', sans-serif",
+    correctOption: "A",
+    explanation: "Times New Roman is a serif typeface, characterized by small decorative strokes (serifs) at the ends of letters. Arial is a sans-serif typeface without these decorative elements."
   },
   {
-    id: 12,
-    level: "mid",
-    category: "interface-comparison",
-    question: "Which design better handles progressive disclosure for a complex feature?",
-    promptContext: "A settings panel with many configuration options.",
-    leftImage: "https://picsum.photos/seed/mid-02-left/400/300",
-    rightImage: "https://picsum.photos/seed/mid-02-right/400/300",
-    correctAnswer: "right",
-    principlesTested: ["progressive disclosure", "cognitive load", "information architecture"],
-    explanation: "The right option uses progressive disclosure to show only relevant options initially, with expandable sections for advanced settings. This reduces initial cognitive load while still providing access to all features.",
-    type: 'design'
+    id: "typeface-beg-q2",
+    difficulty: "beginner",
+    type: "typeface",
+    prompt: "Which typeface works better for a formal business document?",
+    optionA: "'Times New Roman', serif",
+    optionB: "'Comic Sans MS', sans-serif",
+    correctOption: "A",
+    explanation: "Times New Roman is a traditional serif typeface appropriate for formal business documents. Comic Sans MS is an informal, playful font designed for casual use and is inappropriate for formal settings."
   },
   {
-    id: 13,
-    level: "mid",
-    category: "interface-comparison",
-    question: "Which interface provides better affordance for interactive elements?",
-    promptContext: "Users need to understand what can be clicked or interacted with.",
-    leftImage: "https://picsum.photos/seed/mid-03-left/400/300",
-    rightImage: "https://picsum.photos/seed/mid-03-right/400/300",
-    correctAnswer: "right",
-    principlesTested: ["affordance", "usability", "visual clarity"],
-    explanation: "The right option makes interactive elements clearly distinguishable through hover states, shadows, and visual cues. While both might be functional, better affordance reduces user hesitation and improves discoverability.",
-    type: 'design'
+    id: "typeface-beg-q3",
+    difficulty: "beginner",
+    type: "typeface",
+    prompt: "Which typeface is a sans-serif font?",
+    optionA: "'Helvetica', sans-serif",
+    optionB: "'Garamond', serif",
+    correctOption: "A",
+    explanation: "Helvetica is a sans-serif typeface, meaning it lacks the decorative strokes (serifs) found at the ends of letters. Garamond is a serif typeface with decorative serifs."
   },
   {
-    id: 14,
-    level: "mid",
-    category: "interface-comparison",
-    question: "Which design better balances consistency with necessary emphasis?",
-    promptContext: "A notification system that must be consistent but also draw attention when needed.",
-    leftImage: "https://picsum.photos/seed/mid-04-left/400/300",
-    rightImage: "https://picsum.photos/seed/mid-04-right/400/300",
-    correctAnswer: "left",
-    principlesTested: ["consistency vs emphasis", "contextual hierarchy"],
-    explanation: "The left option maintains visual consistency while using strategic emphasis only when truly important. Consistency helps users learn patterns, but selective emphasis ensures critical information isn't missed.",
-    type: 'design'
+    id: "typeface-beg-q4",
+    difficulty: "beginner",
+    type: "typeface",
+    prompt: "Which typeface is more appropriate for a children's book?",
+    optionA: "'Comic Sans MS', sans-serif",
+    optionB: "'Times New Roman', serif",
+    correctOption: "A",
+    explanation: "Comic Sans MS is a playful, informal font that works well for children's content. Times New Roman is a formal serif font better suited for academic or business documents."
   },
   {
-    id: 15,
-    level: "mid",
-    category: "font-identification",
-    question: "Which typeface belongs to the serif family?",
-    leftFont: "'Verdana', sans-serif",
-    rightFont: "'Georgia', serif",
-    correctAnswer: "right",
-    principlesTested: ["typography fundamentals"],
-    explanation: "Georgia is a serif typeface designed specifically for screen readability, featuring serifs on its letterforms. Verdana is a sans-serif typeface without serifs.",
-    type: 'font'
+    id: "typeface-beg-q5",
+    difficulty: "beginner",
+    type: "typeface",
+    prompt: "Which typeface is better for a wedding invitation?",
+    optionA: "'Garamond', serif",
+    optionB: "'Arial', sans-serif",
+    correctOption: "A",
+    explanation: "Garamond is an elegant serif typeface with classic, refined letterforms appropriate for formal occasions like weddings. Arial is a utilitarian sans-serif better suited for modern, casual contexts."
+  },
+
+  // MID LEVEL - IMAGE QUESTIONS (12 total)
+  {
+    id: "typo-med-q16",
+    difficulty: "mid",
+    type: "image",
+    prompt: "Which of these images is most correct?",
+    optionA: "/typo-med-q16-a.png",
+    optionB: "/typo-med-q16-b.png",
+    correctOption: "A",
+    explanation: "The correct option demonstrates better typography choices, with appropriate font selection, sizing, and spacing that improve readability and visual hierarchy."
   },
   {
-    id: 16,
-    level: "mid",
-    category: "interface-comparison",
-    question: "Which layout better manages cognitive load for a multi-step process?",
-    promptContext: "A checkout flow with multiple steps that must feel manageable.",
-    leftImage: "https://picsum.photos/seed/mid-06-left/400/300",
-    rightImage: "https://picsum.photos/seed/mid-06-right/400/300",
-    correctAnswer: "right",
-    principlesTested: ["cognitive load", "progressive disclosure", "information architecture"],
-    explanation: "The right option breaks the process into clear, manageable steps with visual progress indicators. This reduces cognitive load by letting users focus on one step at a time rather than overwhelming them with all information upfront.",
-    type: 'design'
+    id: "spacing-med-q17",
+    difficulty: "mid",
+    type: "image",
+    prompt: "Which of these images is most correct?",
+    optionA: "/spacing-med-q17-a.png",
+    optionB: "/spacing-med-q17-b.png",
+    correctOption: "A",
+    explanation: "The correct option uses spacing more strategically, balancing information density with visual breathing room to support both scanning and detailed reading."
   },
   {
-    id: 17,
-    level: "mid",
-    category: "interface-comparison",
-    question: "Which interface better adapts hierarchy for different content types?",
-    promptContext: "A content management system displaying various content formats.",
-    leftImage: "https://picsum.photos/seed/mid-07-left/400/300",
-    rightImage: "https://picsum.photos/seed/mid-07-right/400/300",
-    correctAnswer: "left",
-    principlesTested: ["contextual hierarchy", "flexibility"],
-    explanation: "The left option adjusts its hierarchy based on content type, emphasizing different elements as context demands. This contextual approach is more appropriate for varied content than a rigid, one-size-fits-all hierarchy.",
-    type: 'design'
+    id: "curve radius consistency-med-q18",
+    difficulty: "mid",
+    type: "image",
+    prompt: "Which of these images is most correct?",
+    optionA: "/curve radius consistency-med-q18-a.png",
+    optionB: "/curve radius consistency-med-q18-b.png",
+    correctOption: "A",
+    explanation: "The correct option maintains consistent curve radius and corner rounding throughout the interface, creating visual harmony and a more polished appearance."
   },
   {
-    id: 18,
-    level: "mid",
-    category: "interface-comparison",
-    question: "Which design better handles information density for expert users?",
-    promptContext: "A developer tool where users need to see many details at once.",
-    leftImage: "https://picsum.photos/seed/mid-08-left/400/300",
-    rightImage: "https://picsum.photos/seed/mid-08-right/400/300",
-    correctAnswer: "left",
-    principlesTested: ["information density", "cognitive load", "user expertise"],
-    explanation: "The left option presents more information in a structured, scannable format. For expert users in professional tools, higher information density is valuable as it reduces navigation and provides necessary context at a glance.",
-    type: 'design'
+    id: "selection type-med-q19",
+    difficulty: "mid",
+    type: "image",
+    prompt: "Which of these images is most correct?",
+    optionA: "/selection type-med-q19-a.png",
+    optionB: "/selection type-med-q19-b.png",
+    correctOption: "A",
+    explanation: "The correct option uses selection states more effectively, providing clear visual feedback that helps users understand their current context and available actions."
   },
   {
-    id: 19,
-    level: "mid",
-    category: "interface-comparison",
-    question: "Which interface better provides affordance through visual design?",
-    promptContext: "Users need to understand functionality without prior experience.",
-    leftImage: "https://picsum.photos/seed/mid-09-left/400/300",
-    rightImage: "https://picsum.photos/seed/mid-09-right/400/300",
-    correctAnswer: "right",
-    principlesTested: ["affordance", "usability", "visual communication"],
-    explanation: "The right option uses visual design cues like icons, hover states, and styling to communicate interactivity. Better affordance reduces the learning curve and makes interfaces more intuitive for new users.",
-    type: 'design'
+    id: "size-med-q20",
+    difficulty: "mid",
+    type: "image",
+    prompt: "Which of these images is most correct?",
+    optionA: "/size-med-q20-a.png",
+    optionB: "/size-med-q20-b.png",
+    correctOption: "A",
+    explanation: "The correct option demonstrates better size relationships between elements, creating appropriate visual hierarchy while maintaining functional usability."
   },
   {
-    id: 20,
-    level: "mid",
-    category: "interface-comparison",
-    question: "Which design better balances simplicity with necessary functionality?",
-    promptContext: "An interface that must be simple but also powerful for advanced use cases.",
-    leftImage: "https://picsum.photos/seed/mid-10-left/400/300",
-    rightImage: "https://picsum.photos/seed/mid-10-right/400/300",
-    correctAnswer: "left",
-    principlesTested: ["progressive disclosure", "consistency vs emphasis", "usability"],
-    explanation: "The left option maintains a simple default interface while providing access to advanced features through progressive disclosure. This approach serves both beginners and power users better than trying to show everything at once or hiding functionality.",
-    type: 'design'
+    id: "spacing-med-q21",
+    difficulty: "mid",
+    type: "image",
+    prompt: "Which of these images is most correct?",
+    optionA: "/spacing-med-q21-a.png",
+    optionB: "/spacing-med-q21-b.png",
+    correctOption: "A",
+    explanation: "The correct option balances spacing more effectively, considering both visual rhythm and functional grouping to improve information architecture."
+  },
+  {
+    id: "contrast-med-q22",
+    difficulty: "mid",
+    type: "image",
+    prompt: "Which of these images is most correct?",
+    optionA: "/contrast-med-q22-a.png",
+    optionB: "/contrast-med-q22-b.png",
+    correctOption: "A",
+    explanation: "The correct option uses contrast more strategically, applying it where it matters most to guide attention without creating visual noise or overwhelming the user."
+  },
+  {
+    id: "spacing-med-q23",
+    difficulty: "mid",
+    type: "image",
+    prompt: "Which of these images is most correct?",
+    optionA: "/spacing-med-q23-a.png",
+    optionB: "/spacing-med-q23-b.png",
+    correctOption: "A",
+    explanation: "The correct option demonstrates better spacing consistency, using systematic spacing relationships that create visual cohesion and improve the overall design quality."
+  },
+  {
+    id: "visual balance-med-q24",
+    difficulty: "mid",
+    type: "image",
+    prompt: "Which of these images is most correct?",
+    optionA: "/visual balance-med-q24-a.png",
+    optionB: "/visual balance-med-q24-b.png",
+    correctOption: "A",
+    explanation: "The correct option achieves better visual balance, distributing visual weight more effectively to create a harmonious and stable composition."
+  },
+  {
+    id: "contrast-med-q25",
+    difficulty: "mid",
+    type: "image",
+    prompt: "Which of these images is most correct?",
+    optionA: "/contrast-med-q25-a.png",
+    optionB: "/contrast-med-q25-b.png",
+    correctOption: "A",
+    explanation: "The correct option applies contrast more thoughtfully, using it to establish hierarchy and emphasis while maintaining overall visual harmony."
+  },
+  {
+    id: "alignment-med-q26",
+    difficulty: "mid",
+    type: "image",
+    prompt: "Which of these images is most correct?",
+    optionA: "/alignment-med-q26-a.png",
+    optionB: "/alignment-med-q26-b.png",
+    correctOption: "A",
+    explanation: "The correct option demonstrates better alignment strategy, using consistent alignment patterns that create visual order and improve the interface's professional appearance."
+  },
+  {
+    id: "alignment-med-q27",
+    difficulty: "mid",
+    type: "image",
+    prompt: "Which of these images is most correct?",
+    optionA: "/alignment-med-q27-a.png",
+    optionB: "/alignment-med-q27-b.png",
+    correctOption: "A",
+    explanation: "The correct option uses alignment more effectively to create visual relationships between elements, improving both aesthetics and usability."
+  },
+
+  // MID LEVEL - TYPEFACE QUESTIONS (8 total)
+  // Mix: Right font for right use case, readability, contrast, and identify fonts
+  {
+    id: "typeface-med-q1",
+    difficulty: "mid",
+    type: "typeface",
+    prompt: "Which typeface has better readability for extended reading?",
+    optionA: "'Merriweather', serif",
+    optionB: "'Courier New', monospace",
+    correctOption: "A",
+    explanation: "Merriweather is a serif typeface designed specifically for comfortable reading in long-form content. Courier New is a monospace font designed for code, not body text."
+  },
+  {
+    id: "typeface-med-q2",
+    difficulty: "mid",
+    type: "typeface",
+    prompt: "Which typeface provides better contrast for accessibility?",
+    optionA: "'Open Sans', sans-serif",
+    optionB: "'Papyrus', fantasy",
+    correctOption: "A",
+    explanation: "Open Sans is a humanist sans-serif designed for excellent readability and contrast on screens. Papyrus is a decorative font with poor readability and contrast."
+  },
+  {
+    id: "typeface-med-q3",
+    difficulty: "mid",
+    type: "typeface",
+    prompt: "Which typeface is Poppins?",
+    optionA: "'Poppins', sans-serif",
+    optionB: "'Roboto', sans-serif",
+    correctOption: "A",
+    explanation: "Poppins is a geometric sans-serif typeface with rounded letterforms, designed by Indian Type Foundry. Roboto is a different geometric sans-serif with distinct character shapes."
+  },
+  {
+    id: "typeface-med-q4",
+    difficulty: "mid",
+    type: "typeface",
+    prompt: "Which typeface offers better readability in small sizes?",
+    optionA: "'Source Sans Pro', sans-serif",
+    optionB: "'Bodoni', serif",
+    correctOption: "A",
+    explanation: "Source Sans Pro is designed for optimal screen readability at various sizes. Bodoni is a high-contrast serif font that performs poorly at small sizes due to thin strokes."
+  },
+  {
+    id: "typeface-med-q5",
+    difficulty: "mid",
+    type: "typeface",
+    prompt: "Which typeface has better contrast for UI elements?",
+    optionA: "'Inter', sans-serif",
+    optionB: "'Brush Script', cursive",
+    correctOption: "A",
+    explanation: "Inter is a typeface specifically designed for user interfaces with excellent letter clarity and contrast. Brush Script is a decorative script font unsuitable for UI elements."
+  },
+  {
+    id: "typeface-med-q6",
+    difficulty: "mid",
+    type: "typeface",
+    prompt: "Which typeface is more appropriate for a modern web interface?",
+    optionA: "'System UI', sans-serif",
+    optionB: "'Old English Text MT', serif",
+    correctOption: "A",
+    explanation: "System UI fonts are designed for modern digital interfaces with optimal readability and performance. Old English Text MT is a decorative blackletter font inappropriate for UI."
+  },
+  {
+    id: "typeface-med-q7",
+    difficulty: "mid",
+    type: "typeface",
+    prompt: "Which typeface provides better readability in body text?",
+    optionA: "'Lora', serif",
+    optionB: "'Impact', sans-serif",
+    correctOption: "A",
+    explanation: "Lora is a serif typeface designed for comfortable reading in body text. Impact is a condensed display font meant for headlines, not extended reading."
+  },
+  {
+    id: "typeface-med-q8",
+    difficulty: "mid",
+    type: "typeface",
+    prompt: "Which typeface has better letter spacing for readability?",
+    optionA: "'PT Sans', sans-serif",
+    optionB: "'Stencil', fantasy",
+    correctOption: "A",
+    explanation: "PT Sans is designed with optimal letter spacing for screen readability. Stencil is a display font with tight spacing that reduces readability in body text."
+  },
+
+  // EXPERT LEVEL - IMAGE QUESTIONS (13 total)
+  {
+    id: "info break-exp-q28",
+    difficulty: "expert",
+    type: "image",
+    prompt: "Which of these images is most correct?",
+    optionA: "/info break-exp-q28-a.png",
+    optionB: "/info break-exp-q28-a-1.png",
+    correctOption: "A",
+    explanation: "The correct option handles information breaks more effectively, using appropriate visual separation and grouping to improve information architecture and cognitive load."
+  },
+  {
+    id: "spacing-exp-q29",
+    difficulty: "expert",
+    type: "image",
+    prompt: "Which of these images is most correct?",
+    optionA: "/spacing-exp-q29-a.png",
+    optionB: "/spacing-exp-q29-b.png",
+    correctOption: "A",
+    explanation: "The correct option demonstrates more sophisticated spacing relationships, using nuanced spacing to create subtle visual hierarchy and improve information density."
+  },
+  {
+    id: "spacing-exp-q30",
+    difficulty: "expert",
+    type: "image",
+    prompt: "Which of these images is most correct?",
+    optionA: "/spacing-exp-q30-a.png",
+    optionB: "/spacing-exp-q30-a-1.png",
+    correctOption: "A",
+    explanation: "The correct option uses spacing more precisely, applying advanced spacing principles to optimize both visual rhythm and functional relationships between elements."
+  },
+  {
+    id: "line spacing-exp-q31",
+    difficulty: "expert",
+    type: "image",
+    prompt: "Which of these images is most correct?",
+    optionA: "/line spacing-exp-q31-a.png",
+    optionB: "/line spacing-exp-q31-b.png",
+    correctOption: "A",
+    explanation: "The correct option demonstrates better line spacing (leading), using optimal line height that improves readability and creates appropriate visual rhythm in text blocks."
+  },
+  {
+    id: "Typo-exp-q32",
+    difficulty: "expert",
+    type: "image",
+    prompt: "Which of these images is most correct?",
+    optionA: "/Typo-exp-q32-a.png",
+    optionB: "/Typo-exp-q32-b.png",
+    correctOption: "A",
+    explanation: "The correct option shows more refined typography, with precise font selection, sizing, and spacing that demonstrates advanced typographic understanding."
+  },
+  {
+    id: "contrast-exp-q33",
+    difficulty: "expert",
+    type: "image",
+    prompt: "Which of these images is most correct?",
+    optionA: "/contrast-exp-q33-a.png",
+    optionB: "/contrast-exp-q33-b.png",
+    correctOption: "A",
+    explanation: "The correct option applies contrast with greater sophistication, using subtle contrast relationships to create nuanced hierarchy without visual noise."
+  },
+  {
+    id: "alignment-exp-q34",
+    difficulty: "expert",
+    type: "image",
+    prompt: "Which of these images is most correct?",
+    optionA: "/alignment-exp-q34-a.png",
+    optionB: "/alignment-exp-q34-b.png",
+    correctOption: "A",
+    explanation: "The correct option demonstrates advanced alignment principles, using complex alignment relationships to create sophisticated visual structure and improve information architecture."
+  },
+  {
+    id: "font-exp-q35",
+    difficulty: "expert",
+    type: "image",
+    prompt: "Which of these images is most correct?",
+    optionA: "/font-exp-q35-a.png",
+    optionB: "/font-exp-q35-b.png",
+    correctOption: "A",
+    explanation: "The correct option shows more refined font usage, with appropriate typeface selection and application that demonstrates expert-level typographic judgment."
+  },
+  {
+    id: "alignment-exp-q36",
+    difficulty: "expert",
+    type: "image",
+    prompt: "Which of these images is most correct?",
+    optionA: "/alignment-exp-q36-a.png",
+    optionB: "/alignment-exp-q36-b.png",
+    correctOption: "A",
+    explanation: "The correct option uses alignment more strategically, applying advanced alignment techniques to create sophisticated visual relationships and improve overall design quality."
+  },
+  {
+    id: "image quality-exp-q37",
+    difficulty: "expert",
+    type: "image",
+    prompt: "Which of these images is most correct?",
+    optionA: "/image quality-exp-q37-a.png",
+    optionB: "/image quality-exp-q37-b.png",
+    correctOption: "A",
+    explanation: "The correct option demonstrates better image quality and optimization, using appropriate resolution, compression, and presentation that maintains visual quality while supporting performance."
+  },
+  {
+    id: "border width-exp-q38",
+    difficulty: "expert",
+    type: "image",
+    prompt: "Which of these images is most correct?",
+    optionA: "/border width-exp-q38-a.png",
+    optionB: "/border width-exp-q38-b.png",
+    correctOption: "A",
+    explanation: "The correct option uses border widths more appropriately, applying consistent and purposeful border weights that support visual hierarchy and design consistency."
+  },
+  {
+    id: "image size-exp-q39",
+    difficulty: "expert",
+    type: "image",
+    prompt: "Which of these images is most correct?",
+    optionA: "/image size-exp-q39-a.png",
+    optionB: "/image size-exp-q39-b.png",
+    correctOption: "A",
+    explanation: "The correct option demonstrates better image sizing, using appropriate dimensions and aspect ratios that support both visual impact and functional requirements."
+  },
+  {
+    id: "icon style-exp-q40",
+    difficulty: "expert",
+    type: "image",
+    prompt: "Which of these images is most correct?",
+    optionA: "/icon style-exp-q40-a.png",
+    optionB: "/icon style-exp-q40-b.png",
+    correctOption: "A",
+    explanation: "The correct option shows more consistent icon styling, using unified visual language and appropriate icon design that maintains coherence throughout the interface."
+  },
+
+  // EXPERT LEVEL - TYPEFACE QUESTIONS (7 total)
+  {
+    id: "typeface-exp-q1",
+    difficulty: "expert",
+    type: "typeface",
+    prompt: "Which typeface is Arial?",
+    optionA: "'Arial', sans-serif",
+    optionB: "'Helvetica', sans-serif",
+    correctOption: "A",
+    explanation: "Arial is a sans-serif typeface with specific character shapes, including a slanted tail on the lowercase 't' and rounded terminals. Helvetica has a horizontal tail on 't' and square terminals."
+  },
+  {
+    id: "typeface-exp-q2",
+    difficulty: "expert",
+    type: "typeface",
+    prompt: "Which typeface is Helvetica?",
+    optionA: "'Helvetica', sans-serif",
+    optionB: "'Arial', sans-serif",
+    correctOption: "A",
+    explanation: "Helvetica is characterized by its square terminals, horizontal tail on lowercase 't', and uniform stroke widths. Arial has more rounded terminals and a slanted 't' tail."
+  },
+  {
+    id: "typeface-exp-q3",
+    difficulty: "expert",
+    type: "typeface",
+    prompt: "Which typeface is Georgia?",
+    optionA: "'Georgia', serif",
+    optionB: "'Times New Roman', serif",
+    correctOption: "A",
+    explanation: "Georgia has wider letterforms, larger x-height, and more generous spacing designed specifically for screen readability. Times New Roman has narrower proportions optimized for print."
+  },
+  {
+    id: "typeface-exp-q4",
+    difficulty: "expert",
+    type: "typeface",
+    prompt: "Which typeface is Verdana?",
+    optionA: "'Verdana', sans-serif",
+    optionB: "'Tahoma', sans-serif",
+    correctOption: "A",
+    explanation: "Verdana has very wide letterforms and generous spacing, designed by Matthew Carter for Microsoft. Tahoma is narrower with tighter spacing, also designed by Carter but with different proportions."
+  },
+  {
+    id: "typeface-exp-q5",
+    difficulty: "expert",
+    type: "typeface",
+    prompt: "Which typeface is Garamond?",
+    optionA: "'Garamond', serif",
+    optionB: "'Baskerville', serif",
+    correctOption: "A",
+    explanation: "Garamond is an old-style serif with bracketed serifs, moderate contrast, and a smaller x-height. Baskerville is a transitional serif with higher contrast and sharper serifs."
+  },
+  {
+    id: "typeface-exp-q6",
+    difficulty: "expert",
+    type: "typeface",
+    prompt: "Which typeface is Futura?",
+    optionA: "'Futura', sans-serif",
+    optionB: "'Gotham', sans-serif",
+    correctOption: "A",
+    explanation: "Futura is a geometric sans-serif with perfect circles in letters like 'o' and 'a', designed by Paul Renner. Gotham is also geometric but has more humanist proportions and distinct character shapes."
+  },
+  {
+    id: "typeface-exp-q7",
+    difficulty: "expert",
+    type: "typeface",
+    prompt: "Which typeface is Baskerville?",
+    optionA: "'Baskerville', serif",
+    optionB: "'Garamond', serif",
+    correctOption: "A",
+    explanation: "Baskerville is a transitional serif typeface with high contrast between thick and thin strokes, sharp serifs, and vertical stress. Garamond is an old-style serif with lower contrast and bracketed serifs."
   }
 ]
-
