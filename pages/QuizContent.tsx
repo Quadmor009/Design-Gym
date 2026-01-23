@@ -107,8 +107,9 @@ function getRandomizedQuestions(): Question[] {
     selectedQuestions.push(...selected)
   }
   
-  // STEP 6: Merge and shuffle final list
-  return shuffleArray(selectedQuestions)
+  // STEP 6: Return questions in level order (beginner, mid, expert)
+  // Each level is shuffled within itself, but levels remain in order
+  return selectedQuestions
 }
 
 // Shuffle answer options at render time
@@ -162,11 +163,7 @@ export default function QuizContent() {
     )
   }, [currentQuestion])
 
-  // Check if we're at specific question numbers for level transitions
-  // Question 5 (index 4) = end of beginner, start of mid
-  // Question 12 (index 11) = end of mid, start of expert
-  const isAfterQuestion5 = currentQuestionIndex === 4 // After answering question 5
-  const isAfterQuestion12 = currentQuestionIndex === 11 // After answering question 12
+  // Check if we're at the last question
   const isLastQuestion = currentQuestionIndex === sessionQuestions.length - 1
 
   const handleSelect = (side: 'left' | 'right') => {
@@ -197,14 +194,16 @@ export default function QuizContent() {
 
   const handleNext = () => {
     // Check if we just completed question 5 (beginner level complete)
-    if (isAfterQuestion5) {
+    // After answering question 5 (index 4), clicking Next should show modal
+    if (currentQuestionIndex === 4) {
       setCompletedLevel('beginner')
       setShowLevelCompleteModal(true)
       return
     }
     
     // Check if we just completed question 12 (mid level complete)
-    if (isAfterQuestion12) {
+    // After answering question 12 (index 11), clicking Next should show modal
+    if (currentQuestionIndex === 11) {
       setCompletedLevel('mid')
       setShowLevelCompleteModal(true)
       return
