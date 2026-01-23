@@ -41,10 +41,15 @@
   animation: coin-bounce 1.5s ease-in-out infinite, coin-glow 2.5s ease-in-out infinite;
 }
 
-/* Hide scrollbars and prevent scrolling */
+/* Hide scrollbars but allow vertical scrolling */
 html, body {
-  overflow: hidden;
+  overflow-x: hidden;
   height: 100%;
+}
+
+/* Allow vertical scrolling on quiz page */
+body.quiz-page {
+  overflow-y: auto;
 }
 
 /* Hide scrollbar for webkit browsers */

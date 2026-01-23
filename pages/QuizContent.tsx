@@ -162,6 +162,14 @@ export default function QuizContent() {
   // Share tone toggle
   const [shareTone, setShareTone] = useState<'brag' | 'humble'>('brag')
 
+  // Enable scrolling on quiz page
+  useEffect(() => {
+    document.body.classList.add('quiz-page')
+    return () => {
+      document.body.classList.remove('quiz-page')
+    }
+  }, [])
+
   const currentQuestion = sessionQuestions[currentQuestionIndex]
   
   // Shuffle options at render time for each question
@@ -420,7 +428,7 @@ ${siteUrl}`
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
 
-      <main className="min-h-screen bg-white px-4 sm:px-6 py-8 sm:py-12 md:px-12 md:py-16 overflow-y-auto">
+      <main className="min-h-screen bg-white px-4 sm:px-6 py-8 sm:py-12 md:px-12 md:py-16">
         {/* Fixed coin counter at top-right */}
         <div className="fixed top-4 right-4 sm:top-8 sm:right-8 md:top-12 md:right-12 z-10">
           <div className="flex items-center justify-center gap-2 border-2 border-amber-200 rounded-[12px] px-4 py-2.5 bg-gradient-to-br from-amber-50 to-yellow-50">
@@ -465,7 +473,7 @@ ${siteUrl}`
             </h2>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-2 gap-3 sm:gap-4 md:gap-6 mb-8 sm:mb-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-8 sm:mb-12">
             <div
               onClick={() => handleSelect('left')}
               className={`cursor-pointer transition-all relative group ${currentQuestion.type === 'typeface'
