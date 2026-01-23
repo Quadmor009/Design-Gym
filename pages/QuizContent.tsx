@@ -170,6 +170,11 @@ export default function QuizContent() {
     }
   }, [])
 
+  // Scroll to top when question changes
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }, [currentQuestionIndex])
+
   const currentQuestion = sessionQuestions[currentQuestionIndex]
   
   // Shuffle options at render time for each question
@@ -428,13 +433,13 @@ ${siteUrl}`
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
 
-      <main className="min-h-screen bg-white px-4 sm:px-6 py-8 sm:py-12 md:px-12 md:py-16">
+      <main className="min-h-screen bg-white px-3 sm:px-6 py-6 sm:py-12 md:px-12 md:py-16 w-full overflow-x-hidden">
         {/* Fixed coin counter at top-right */}
-        <div className="fixed top-4 right-4 sm:top-8 sm:right-8 md:top-12 md:right-12 z-10">
-          <div className="flex items-center justify-center gap-2 border-2 border-amber-200 rounded-[12px] px-4 py-2.5 bg-gradient-to-br from-amber-50 to-yellow-50">
+        <div className="fixed top-2 right-2 sm:top-8 sm:right-8 md:top-12 md:right-12 z-10">
+          <div className="flex items-center justify-center gap-1.5 sm:gap-2 border-2 border-amber-200 rounded-[12px] px-2.5 sm:px-4 py-1.5 sm:py-2.5 bg-gradient-to-br from-amber-50 to-yellow-50">
             <svg 
               key={`coin-${coins}`}
-              className={`w-5 h-5 ${isCoinAnimating ? 'coin-animate' : ''}`}
+              className={`w-4 h-4 sm:w-5 sm:h-5 ${isCoinAnimating ? 'coin-animate' : ''}`}
               style={{ transformOrigin: 'center', display: 'inline-block' }}
               viewBox="0 0 24 24" 
               fill="none" 
@@ -444,16 +449,16 @@ ${siteUrl}`
               <circle cx="12" cy="12" r="6" fill="#FCD34D" opacity="0.6"/>
               <path d="M12 8C9.79 8 8 9.79 8 12C8 14.21 9.79 16 12 16C14.21 16 16 14.21 16 12C16 9.79 14.21 8 12 8Z" fill="#F59E0B" opacity="0.3"/>
             </svg>
-            <span className="text-sm font-semibold text-amber-900">{coins}</span>
+            <span className="text-xs sm:text-sm font-semibold text-amber-900">{coins}</span>
           </div>
         </div>
-        <div className="max-w-6xl mx-auto">
-          <div className="mb-12 text-center">
-            <div className="text-xl md:text-2xl font-medium text-black mb-4 tracking-normal" style={{ fontFamily: 'Inter, system-ui, -apple-system, sans-serif', letterSpacing: '0.02em' }}>
+        <div className="max-w-6xl mx-auto w-full px-0">
+          <div className="mb-8 sm:mb-12 text-center">
+            <div className="text-lg sm:text-xl md:text-2xl font-medium text-black mb-3 sm:mb-4 tracking-normal" style={{ fontFamily: 'Inter, system-ui, -apple-system, sans-serif', letterSpacing: '0.02em' }}>
               Design Gym
             </div>
             <div className="mb-4">
-              <div className="text-sm text-gray-500 mb-2">
+              <div className="text-xs sm:text-sm text-gray-500 mb-2">
                 Question {currentQuestionIndex + 1} of {sessionQuestions.length}
               </div>
               <div className="w-full bg-gray-200 h-2 max-w-md mx-auto">
@@ -473,7 +478,7 @@ ${siteUrl}`
             </h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-8 sm:mb-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-6 mb-8 sm:mb-12 w-full">
             <div
               onClick={() => handleSelect('left')}
               className={`cursor-pointer transition-all relative group ${currentQuestion.type === 'typeface'
@@ -552,7 +557,7 @@ ${siteUrl}`
                   alt="Design option"
                   className={`w-full h-auto object-contain transition-transform ${!showExplanation ? 'group-hover:scale-[1.02]' : ''
                     }`}
-                  style={{ maxHeight: '400px' }}
+                  style={{ maxHeight: '400px', maxWidth: '100%' }}
                 />
               )}
               {!showExplanation && (
