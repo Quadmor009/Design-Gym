@@ -158,6 +158,9 @@ export default function QuizContent() {
   // Player name
   const [playerName, setPlayerName] = useState('')
   const [submittingLeaderboard, setSubmittingLeaderboard] = useState(false)
+  
+  // Share tone toggle
+  const [shareTone, setShareTone] = useState<'brag' | 'humble'>('brag')
 
   const currentQuestion = sessionQuestions[currentQuestionIndex]
   
@@ -335,11 +338,33 @@ export default function QuizContent() {
 
   const handleShareOnTwitter = () => {
     const siteUrl = typeof window !== 'undefined' ? window.location.origin : ''
-    const tweetText = `Just trained my design instincts at Design Gym
-Coins: ${coins} / ${maxCoins}
-Accuracy: ${accuracy}% 
+    
+    // Tweet templates for Brag mode - only the opening line changes
+    const bragOpenings = [
+      'Just crushed a session at Design Gym. My eye is getting sharper.',
+      'Finished another round at Design Gym. Feeling confident about my design instincts.',
+      'Design Gym session complete. My visual judgment is on point.',
+      'Just leveled up my design eye at Design Gym. Results speak for themselves.'
+    ]
 
-Train your eye → ${siteUrl}`
+    // Tweet templates for Humble mode - only the opening line changes
+    const humbleOpenings = [
+      'Just finished a session at Design Gym. Still learning, but making progress.',
+      'Completed another round at Design Gym. Every session teaches me something new.',
+      'Finished a Design Gym session. Practice makes progress, not perfect.',
+      'Just wrapped up at Design Gym. Always room to improve, but happy with the effort.'
+    ]
+
+    // Select random opening based on tone
+    const openings = shareTone === 'brag' ? bragOpenings : humbleOpenings
+    const opening = openings[Math.floor(Math.random() * openings.length)]
+    
+    // Build tweet with consistent structure (score, accuracy, link never change)
+    const tweetText = `${opening}
+
+${coins} points • ${accuracy}% accuracy
+
+${siteUrl}`
     
     const encodedText = encodeURIComponent(tweetText)
     const twitterUrl = `https://twitter.com/intent/tweet?text=${encodedText}`
@@ -699,6 +724,34 @@ Train your eye → ${siteUrl}`
                     {getFeedback(accuracy)}
                   </div>
                 </div>
+                
+                {/* Share Tone Toggle */}
+                <div className="mb-4">
+                  <div className="flex items-center justify-center gap-2 mb-3">
+                    <span className="text-xs text-gray-500 font-medium">Share tone:</span>
+                    <button
+                      onClick={() => setShareTone('humble')}
+                      className={`px-3 py-1.5 text-xs font-medium rounded-[8px] transition-colors ${
+                        shareTone === 'humble'
+                          ? 'bg-gray-900 text-white'
+                          : 'bg-gray-100 text-gray-400 hover:bg-gray-200'
+                      }`}
+                    >
+                      Humble
+                    </button>
+                    <button
+                      onClick={() => setShareTone('brag')}
+                      className={`px-3 py-1.5 text-xs font-medium rounded-[8px] transition-colors ${
+                        shareTone === 'brag'
+                          ? 'bg-gray-900 text-white'
+                          : 'bg-gray-100 text-gray-400 hover:bg-gray-200'
+                      }`}
+                    >
+                      Brag
+                    </button>
+                  </div>
+                </div>
+                
                 <div className="flex gap-3 mb-4">
                   <button
                     onClick={handleViewLeaderboard}
