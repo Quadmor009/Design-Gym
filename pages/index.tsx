@@ -63,7 +63,7 @@ export default function Home() {
         {/* Hero Section */}
         <section className="h-full px-4 md:px-8 lg:px-12 xl:px-16 py-8 md:py-12 lg:py-16 relative">
           {/* Social Proof Strip - Bottom Left of Screen */}
-          <div className="absolute bottom-0 left-4 md:left-8 lg:left-12 xl:left-16 pb-8 md:pb-12 lg:pb-16 w-full lg:w-1/2">
+          <div className="absolute bottom-0 left-4 md:left-8 lg:left-12 xl:left-16 pb-4 sm:pb-8 md:pb-12 lg:pb-16 w-full lg:w-1/2">
             <div className="flex flex-col items-start gap-2">
               <div className="w-full lg:w-[45vw] border-t border-gray-200 mb-2"></div>
               <p className="text-xs md:text-sm text-gray-600 font-medium">
@@ -98,7 +98,7 @@ export default function Home() {
                 </p>
                 
                 {/* Main Headline */}
-                <h1 className="text-4xl md:text-5xl lg:text-6xl xl:text-7xl 2xl:text-8xl font-bold text-black mb-4 md:mb-6 tracking-tight leading-[1.1] whitespace-nowrap">
+                <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl 2xl:text-9xl font-bold text-black mb-4 md:mb-6 tracking-tight leading-[1.1]">
                   Design Gym
                 </h1>
 
@@ -177,8 +177,8 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Credit - Bottom Right with filled frame */}
-          <div className="absolute bottom-0 right-4 md:right-8 lg:right-12 xl:right-16 pb-8 md:pb-12 lg:pb-16 z-30">
+          {/* Credit - Bottom Right with filled frame - Hidden on mobile */}
+          <div className="hidden sm:block absolute bottom-0 right-4 md:right-8 lg:right-12 xl:right-16 pb-8 md:pb-12 lg:pb-16 z-30">
             <div className="bg-white/95 backdrop-blur-md px-4 py-2.5 rounded-[8px] border border-gray-300/50 shadow-md hover:shadow-lg transition-all duration-200">
               <p className="text-xs text-gray-800 font-medium tracking-wide">
                 <span className="text-gray-500">Vibe coded by</span>{' '}

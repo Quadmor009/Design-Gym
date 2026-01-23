@@ -420,9 +420,9 @@ ${siteUrl}`
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
 
-      <main className="min-h-screen bg-white px-6 py-12 md:px-12 md:py-16">
+      <main className="min-h-screen bg-white px-4 sm:px-6 py-8 sm:py-12 md:px-12 md:py-16 overflow-y-auto">
         {/* Fixed coin counter at top-right */}
-        <div className="fixed top-12 right-12 z-10">
+        <div className="fixed top-4 right-4 sm:top-8 sm:right-8 md:top-12 md:right-12 z-10">
           <div className="flex items-center justify-center gap-2 border-2 border-amber-200 rounded-[12px] px-4 py-2.5 bg-gradient-to-br from-amber-50 to-yellow-50">
             <svg 
               key={`coin-${coins}`}
@@ -457,15 +457,15 @@ ${siteUrl}`
             </div>
           </div>
 
-          <div className="mb-12">
-            <h2 className="text-xl md:text-2xl font-normal text-center mb-8 text-gray-900">
+          <div className="mb-8 sm:mb-12">
+            <h2 className="text-lg sm:text-xl md:text-2xl font-normal text-center mb-6 sm:mb-8 px-2 text-gray-900">
               {currentQuestion.type === 'image' 
                 ? currentQuestion.prompt 
                 : currentQuestion.prompt}
             </h2>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-6 mb-12">
+          <div className="grid grid-cols-2 md:grid-cols-2 gap-3 sm:gap-4 md:gap-6 mb-8 sm:mb-12">
             <div
               onClick={() => handleSelect('left')}
               className={`cursor-pointer transition-all relative group ${currentQuestion.type === 'typeface'
@@ -482,11 +482,11 @@ ${siteUrl}`
             >
               {currentQuestion.type === 'typeface' ? (
                 <div
-                  className={`p-8 min-h-[300px] flex items-center justify-center bg-white transition-transform ${!showExplanation ? 'group-hover:scale-[1.02]' : ''
+                  className={`p-6 sm:p-8 min-h-[250px] sm:min-h-[300px] flex items-center justify-center bg-white transition-transform ${!showExplanation ? 'group-hover:scale-[1.02]' : ''
                     }`}
                   style={{ fontFamily: shuffledOptions.leftOption }}
                 >
-                  <p className="text-3xl leading-relaxed text-center">
+                  <p className="text-2xl sm:text-3xl leading-relaxed text-center px-2">
                     {foxQuote}
                   </p>
                 </div>
@@ -494,8 +494,9 @@ ${siteUrl}`
                 <img
                   src={shuffledOptions.leftOption}
                   alt="Design option"
-                  className={`w-full h-auto transition-transform ${!showExplanation ? 'group-hover:scale-[1.02]' : ''
+                  className={`w-full h-auto object-contain transition-transform ${!showExplanation ? 'group-hover:scale-[1.02]' : ''
                     }`}
+                  style={{ maxHeight: '400px' }}
                 />
               )}
               {!showExplanation && (
@@ -529,11 +530,11 @@ ${siteUrl}`
             >
               {currentQuestion.type === 'typeface' ? (
                 <div
-                  className={`p-8 min-h-[300px] flex items-center justify-center bg-white transition-transform ${!showExplanation ? 'group-hover:scale-[1.02]' : ''
+                  className={`p-6 sm:p-8 min-h-[250px] sm:min-h-[300px] flex items-center justify-center bg-white transition-transform ${!showExplanation ? 'group-hover:scale-[1.02]' : ''
                     }`}
                   style={{ fontFamily: shuffledOptions.rightOption }}
                 >
-                  <p className="text-3xl leading-relaxed text-center">
+                  <p className="text-2xl sm:text-3xl leading-relaxed text-center px-2">
                     {foxQuote}
                   </p>
                 </div>
@@ -541,8 +542,9 @@ ${siteUrl}`
                 <img
                   src={shuffledOptions.rightOption}
                   alt="Design option"
-                  className={`w-full h-auto transition-transform ${!showExplanation ? 'group-hover:scale-[1.02]' : ''
+                  className={`w-full h-auto object-contain transition-transform ${!showExplanation ? 'group-hover:scale-[1.02]' : ''
                     }`}
+                  style={{ maxHeight: '400px' }}
                 />
               )}
               {!showExplanation && (
@@ -584,46 +586,46 @@ ${siteUrl}`
 
       {/* Instruction Modal - appears over first question */}
       {showInstructionModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-8 max-w-lg mx-4 rounded-[2rem] shadow-lg max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white p-6 sm:p-8 max-w-lg w-full mx-4 rounded-[2rem] shadow-lg max-h-[90vh] overflow-y-auto">
             <h2 className="text-2xl font-normal mb-8 text-center text-gray-900">
               How Design Gym Works
             </h2>
             
-            <div className="flex flex-col md:flex-row gap-8 md:gap-6 mb-8 justify-center items-start">
-              <div className="flex flex-col items-center text-center flex-1">
+            <div className="flex flex-col md:flex-row gap-6 sm:gap-8 md:gap-12 mb-6 sm:mb-8 justify-center items-center md:items-start">
+              <div className="flex flex-col items-center text-center w-full md:flex-1">
                 <div className="mb-3">
                   <svg className="w-12 h-12 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
                 <h3 className="text-lg font-medium text-gray-900 mb-2">Choose</h3>
-                <p className="text-gray-700 leading-[20px] text-sm">
+                <p className="text-gray-700 leading-[20px] text-sm whitespace-pre-line">
                   Pick the better<br />design.
                 </p>
               </div>
               
-              <div className="flex flex-col items-center text-center flex-1">
+              <div className="flex flex-col items-center text-center w-full md:flex-1">
                 <div className="mb-3">
                   <svg className="w-12 h-12 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
                   </svg>
                 </div>
                 <h3 className="text-lg font-medium text-gray-900 mb-2">Compare</h3>
-                <p className="text-gray-700 leading-[20px] text-sm">
-                  Review both designs<br />after answering.
+                <p className="text-gray-700 leading-[20px] text-sm whitespace-pre-line">
+                  Review both<br />after answering.
                 </p>
               </div>
               
-              <div className="flex flex-col items-center text-center flex-1">
+              <div className="flex flex-col items-center text-center w-full md:flex-1">
                 <div className="mb-3">
                   <svg className="w-12 h-12 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
                 <h3 className="text-lg font-medium text-gray-900 mb-2">Earn</h3>
-                <p className="text-gray-700 leading-[20px] text-sm">
-                  Each correct answer earns 100 coins.
+                <p className="text-gray-700 leading-[20px] text-sm whitespace-pre-line">
+                  Correct answers<br />earn 100 coins.
                 </p>
               </div>
             </div>
@@ -631,7 +633,7 @@ ${siteUrl}`
             <div className="text-center">
               <button
                 onClick={handleStartTraining}
-                className="px-8 py-3 bg-black text-white font-normal hover:bg-gray-800 transition-colors rounded-[8px]"
+                className="w-full sm:w-auto px-6 sm:px-8 py-3 bg-black text-white font-normal hover:bg-gray-800 transition-colors rounded-[8px] text-sm sm:text-base"
               >
                 Start training
               </button>
@@ -642,8 +644,8 @@ ${siteUrl}`
 
       {/* Level Complete Modal */}
       {showLevelCompleteModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-8 max-w-md mx-4 rounded-[2rem] shadow-lg">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white p-6 sm:p-8 max-w-md w-full mx-4 rounded-[2rem] shadow-lg max-h-[90vh] overflow-y-auto">
             {completedLevel === 'beginner' ? (
               <>
                 <div className="flex justify-center mb-4">
@@ -651,16 +653,16 @@ ${siteUrl}`
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
-                <h2 className="text-2xl font-normal mb-4 text-center">
+                <h2 className="text-xl sm:text-2xl font-normal mb-4 text-center">
                   Beginner Level Complete!
                 </h2>
-                <p className="text-gray-700 mb-6 text-center leading-relaxed">
+                <p className="text-gray-700 mb-6 text-center leading-relaxed text-sm sm:text-base">
                   Great job completing the beginner level! Ready to move on to the intermediate level?
                 </p>
                 <div className="text-center">
                   <button
                     onClick={handleProceedToNextLevel}
-                    className="px-8 py-3 bg-black text-white font-normal hover:bg-gray-800 transition-colors rounded-[8px]"
+                    className="w-full sm:w-auto px-6 sm:px-8 py-3 bg-black text-white font-normal hover:bg-gray-800 transition-colors rounded-[8px] text-sm sm:text-base"
                   >
                     Continue to Next Level
                   </button>
@@ -673,16 +675,16 @@ ${siteUrl}`
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
-                <h2 className="text-2xl font-normal mb-4 text-center">
+                <h2 className="text-xl sm:text-2xl font-normal mb-4 text-center">
                   Intermediate Level Complete!
                 </h2>
-                <p className="text-gray-700 mb-6 text-center leading-relaxed">
+                <p className="text-gray-700 mb-6 text-center leading-relaxed text-sm sm:text-base">
                   Excellent work! Ready to move on to the expert level?
                 </p>
                 <div className="text-center">
                   <button
                     onClick={handleProceedToNextLevel}
-                    className="px-8 py-3 bg-black text-white font-normal hover:bg-gray-800 transition-colors rounded-[8px]"
+                    className="w-full sm:w-auto px-6 sm:px-8 py-3 bg-black text-white font-normal hover:bg-gray-800 transition-colors rounded-[8px] text-sm sm:text-base"
                   >
                     Continue to Next Level
                   </button>
@@ -697,7 +699,7 @@ ${siteUrl}`
                     className="w-16 h-16 object-contain"
                   />
                 </div>
-                <h2 className="text-2xl font-normal mb-6 text-center">
+                <h2 className="text-xl sm:text-2xl font-normal mb-4 sm:mb-6 text-center">
                   Session Complete
                 </h2>
                 <div className="mb-6">
@@ -752,18 +754,18 @@ ${siteUrl}`
                   </div>
                 </div>
                 
-                <div className="flex gap-3 mb-4">
+                <div className="flex flex-col sm:flex-row gap-3 mb-4">
                   <button
                     onClick={handleViewLeaderboard}
-                    className="w-1/2 px-8 py-3 bg-black text-white font-normal hover:bg-gray-800 transition-colors whitespace-nowrap rounded-[8px]"
+                    className="w-full sm:w-1/2 px-6 sm:px-8 py-3 bg-black text-white font-normal hover:bg-gray-800 transition-colors whitespace-nowrap rounded-[8px] text-sm sm:text-base"
                   >
                     View Leaderboard
                   </button>
                   <button
                     onClick={handleShareOnTwitter}
-                    className="w-1/2 px-8 py-3 bg-blue-500 text-white font-normal hover:bg-blue-600 transition-colors whitespace-nowrap flex items-center justify-center gap-2 rounded-[8px]"
+                    className="w-full sm:w-1/2 px-6 sm:px-8 py-3 bg-blue-500 text-white font-normal hover:bg-blue-600 transition-colors whitespace-nowrap flex items-center justify-center gap-2 rounded-[8px] text-sm sm:text-base"
                   >
-                    <svg className="w-7 h-7 fill-current" viewBox="0 0 24 24" aria-hidden="true">
+                    <svg className="w-5 h-5 sm:w-7 sm:h-7 fill-current" viewBox="0 0 24 24" aria-hidden="true">
                       <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
                     </svg>
                     Share on X
@@ -785,12 +787,12 @@ ${siteUrl}`
 
       {/* Name Input Modal - appears before session starts */}
       {showNameInputModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-8 max-w-md mx-4 rounded-[2rem] shadow-lg">
-            <h2 className="text-2xl font-normal mb-4 text-center text-gray-900">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white p-6 sm:p-8 max-w-md w-full mx-4 rounded-[2rem] shadow-lg">
+            <h2 className="text-xl sm:text-2xl font-normal mb-4 text-center text-gray-900">
               Enter Your Name
             </h2>
-            <p className="text-gray-600 mb-6 text-center text-sm">
+            <p className="text-gray-600 mb-6 text-center text-xs sm:text-sm">
               Your name will appear on the leaderboard
             </p>
             <div className="mb-6">
@@ -800,7 +802,7 @@ ${siteUrl}`
                 onChange={(e) => setPlayerName(e.target.value)}
                 placeholder="Your name"
                 maxLength={20}
-                className="w-full px-4 py-3 border border-gray-300 rounded-[8px] text-gray-900 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-300 rounded-[8px] text-gray-900 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm sm:text-base"
                 onKeyPress={(e) => {
                   if (e.key === 'Enter' && playerName.trim()) {
                     handleNameSubmit()
@@ -813,7 +815,7 @@ ${siteUrl}`
               <button
                 onClick={handleNameSubmit}
                 disabled={!playerName.trim()}
-                className="px-8 py-3 bg-black text-white font-normal hover:bg-gray-800 transition-colors rounded-[8px] disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full sm:w-auto px-6 sm:px-8 py-3 bg-black text-white font-normal hover:bg-gray-800 transition-colors rounded-[8px] disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
               >
                 Start Training
               </button>
