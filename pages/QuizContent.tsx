@@ -314,18 +314,22 @@ export default function QuizContent() {
           const timeTaken = Math.floor((finalEndTime - startTime) / 1000)
           const level = 'all'
           
+          const submissionData = {
+            name: playerName.trim(),
+            score: coins,
+            accuracy: accuracy,
+            timeTaken: timeTaken,
+            level: level,
+          }
+          
+          console.log('Submitting to leaderboard:', submissionData)
+          
           const response = await fetch('/api/leaderboard', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
             },
-            body: JSON.stringify({
-              name: playerName.trim(),
-              score: coins,
-              accuracy: accuracy,
-              timeTaken: timeTaken,
-              level: level,
-            }),
+            body: JSON.stringify(submissionData),
           })
           
           if (response.ok) {
@@ -333,9 +337,16 @@ export default function QuizContent() {
             if (typeof window !== 'undefined') {
               sessionStorage.setItem('lastLeaderboardEntryId', entry.id)
             }
+            console.log('Successfully submitted to leaderboard:', entry)
+          } else {
+            // Get error message from response
+            const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
+            console.error('Failed to submit to leaderboard:', response.status, errorData)
+            alert(`Failed to save score: ${errorData.error || errorData.message || 'Unknown error'}`)
           }
         } catch (error) {
           console.error('Error submitting to leaderboard:', error)
+          alert(`Error saving score: ${error instanceof Error ? error.message : 'Unknown error'}`)
         } finally {
           setSubmittingLeaderboard(false)
         }

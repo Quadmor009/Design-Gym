@@ -1,6 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
-import fs from 'fs'
-import path from 'path'
+import { query } from '../../lib/db'
 
 export interface LeaderboardEntry {
   id: string
@@ -12,102 +11,110 @@ export interface LeaderboardEntry {
   timestamp: number
 }
 
-const LEADERBOARD_FILE = path.join(process.cwd(), 'data', 'leaderboard.json')
-
-// Ensure data directory exists
-function ensureDataDirectory() {
-  const dataDir = path.join(process.cwd(), 'data')
-  if (!fs.existsSync(dataDir)) {
-    fs.mkdirSync(dataDir, { recursive: true })
-  }
-}
-
-// Read leaderboard data
-function readLeaderboard(): LeaderboardEntry[] {
-  ensureDataDirectory()
-  if (!fs.existsSync(LEADERBOARD_FILE)) {
-    return []
-  }
-  try {
-    const data = fs.readFileSync(LEADERBOARD_FILE, 'utf8')
-    return JSON.parse(data)
-  } catch (error) {
-    console.error('Error reading leaderboard:', error)
-    return []
-  }
-}
-
-// Write leaderboard data
-function writeLeaderboard(entries: LeaderboardEntry[]) {
-  ensureDataDirectory()
-  fs.writeFileSync(LEADERBOARD_FILE, JSON.stringify(entries, null, 2))
-}
-
-// Sort entries: score DESC, accuracy DESC, timeTaken ASC
-function sortEntries(entries: LeaderboardEntry[]): LeaderboardEntry[] {
-  return [...entries].sort((a, b) => {
-    // First by score (descending)
-    if (b.score !== a.score) {
-      return b.score - a.score
-    }
-    // Then by accuracy (descending)
-    if (b.accuracy !== a.accuracy) {
-      return b.accuracy - a.accuracy
-    }
-    // Finally by time taken (ascending - faster is better)
-    return a.timeTaken - b.timeTaken
-  })
-}
-
-// Filter entries by level
-function filterByLevel(entries: LeaderboardEntry[], level: string): LeaderboardEntry[] {
-  if (level === 'all' || level === 'global') {
-    return entries
-  }
-  return entries.filter(entry => entry.level === level)
-}
-
-export default function handler(
+export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
+  // Set CORS headers
+  res.setHeader('Access-Control-Allow-Origin', '*')
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end()
+  }
+
   try {
+    // Check if database is configured
+    if (!process.env.DATABASE_URL) {
+      console.error('DATABASE_URL is not set')
+      return res.status(503).json({ 
+        error: 'Database not configured',
+        message: 'DATABASE_URL environment variable is missing'
+      })
+    }
+
     if (req.method === 'GET') {
       const { level = 'all' } = req.query
-      const entries = readLeaderboard()
-      const filtered = filterByLevel(entries, level as string)
-      const sorted = sortEntries(filtered)
       
-      res.status(200).json(sorted)
+      let sql: string
+      let params: any[] = []
+      
+      if (level === 'all' || level === 'global') {
+        // Get all entries, sorted by score DESC, accuracy DESC, time_taken ASC
+        sql = `
+          SELECT id, name, score, accuracy, time_taken as "timeTaken", level, timestamp
+          FROM leaderboard
+          ORDER BY score DESC, accuracy DESC, time_taken ASC
+        `
+      } else {
+        // Filter by level
+        sql = `
+          SELECT id, name, score, accuracy, time_taken as "timeTaken", level, timestamp
+          FROM leaderboard
+          WHERE level = $1
+          ORDER BY score DESC, accuracy DESC, time_taken ASC
+        `
+        params = [level]
+      }
+      
+      const result = await query(sql, params)
+      const entries: LeaderboardEntry[] = result.rows
+      
+      res.status(200).json(entries)
+      
     } else if (req.method === 'POST') {
-    const entry: LeaderboardEntry = req.body
-    
-    // Validate entry
-    if (!entry.name || entry.score === undefined || entry.accuracy === undefined || !entry.timeTaken) {
-      return res.status(400).json({ error: 'Missing required fields' })
-    }
-    
-    // Generate ID
-    entry.id = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-    entry.timestamp = Date.now()
-    
-    // Read existing entries
-    const entries = readLeaderboard()
-    
-    // Add new entry
-    entries.push(entry)
-    
-    // Write back
-    writeLeaderboard(entries)
-    
-      res.status(201).json(entry)
+      const entry: LeaderboardEntry = req.body
+      
+      // Validate entry
+      if (!entry.name || entry.score === undefined || entry.accuracy === undefined || entry.timeTaken === undefined) {
+        return res.status(400).json({ error: 'Missing required fields' })
+      }
+      
+      // Validate level
+      if (!['beginner', 'mid', 'expert', 'all'].includes(entry.level)) {
+        return res.status(400).json({ error: 'Invalid level' })
+      }
+      
+      // Generate ID and timestamp
+      const id = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+      const timestamp = Date.now()
+      
+      // Insert into database
+      const insertSQL = `
+        INSERT INTO leaderboard (id, name, score, accuracy, time_taken, level, timestamp)
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
+        RETURNING id, name, score, accuracy, time_taken as "timeTaken", level, timestamp
+      `
+      
+      const result = await query(insertSQL, [
+        id,
+        entry.name,
+        entry.score,
+        entry.accuracy,
+        entry.timeTaken,
+        entry.level,
+        timestamp
+      ])
+      
+      const newEntry: LeaderboardEntry = result.rows[0]
+      
+      res.status(201).json(newEntry)
+      
     } else {
       res.setHeader('Allow', ['GET', 'POST'])
       res.status(405).json({ error: 'Method not allowed' })
     }
   } catch (error) {
     console.error('Leaderboard API error:', error)
-    res.status(500).json({ error: 'Internal server error' })
+    
+    // Ensure we always send a response, even if there's an error
+    if (!res.headersSent) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+      res.status(500).json({ 
+        error: 'Internal server error',
+        message: errorMessage
+      })
+    }
   }
 }
-
