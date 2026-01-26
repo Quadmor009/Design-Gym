@@ -112,13 +112,23 @@ export default async function handler(
     }
   } catch (error) {
     console.error('Leaderboard API error:', error)
+    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace')
+    console.error('Request method:', req.method)
+    console.error('Request URL:', req.url)
+    console.error('DATABASE_URL exists:', !!process.env.DATABASE_URL)
+    console.error('DATABASE_URL length:', process.env.DATABASE_URL?.length || 0)
     
     // Ensure we always send a response, even if there's an error
     if (!res.headersSent) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+      const errorDetails = process.env.NODE_ENV === 'production' 
+        ? 'Check Vercel function logs for details'
+        : errorMessage
+      
       res.status(500).json({ 
         error: 'Internal server error',
-        message: errorMessage
+        message: errorDetails,
+        ...(process.env.NODE_ENV !== 'production' && { details: errorMessage })
       })
     }
   }
