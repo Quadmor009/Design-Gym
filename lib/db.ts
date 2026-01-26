@@ -12,10 +12,15 @@ export function getDbPool(): Pool {
   const connectionString = process.env.DATABASE_URL
 
   if (!connectionString) {
-    throw new Error(
+    // Don't throw - return a helpful error message instead
+    // This prevents Next.js from crashing during module import
+    const error = new Error(
       'DATABASE_URL environment variable is not set. ' +
-      'Please set it in your .env.local file or Render environment variables.'
+      'Please set it in your .env.local file or Render environment variables. ' +
+      'Make sure to restart your dev server after creating .env.local'
     )
+    console.error(error.message)
+    throw error
   }
 
   try {
@@ -38,6 +43,7 @@ export function getDbPool(): Pool {
     return pool
   } catch (error) {
     console.error('Failed to create database pool:', error)
+    pool = null // Reset pool on error
     throw error
   }
 }

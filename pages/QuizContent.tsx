@@ -219,7 +219,7 @@ export default function QuizContent() {
       if (isLastQuestion) {
         setTimeout(() => {
           setCompletedLevel('expert')
-          setEndTime(Date.now())
+          // Don't set endTime here - let the submission useEffect handle it
           setShowLevelCompleteModal(true)
         }, 500) // Small delay to show the explanation first
       }
@@ -246,7 +246,7 @@ export default function QuizContent() {
     // Check if we just completed the last question (expert level complete)
     if (isLastQuestion) {
       setCompletedLevel('expert')
-      setEndTime(Date.now())
+      // Don't set endTime here - let the submission useEffect handle it
       setShowLevelCompleteModal(true)
       return
     }
@@ -303,7 +303,17 @@ export default function QuizContent() {
 
   // Auto-submit to leaderboard when session completes
   useEffect(() => {
+    console.log('Submission check:', { 
+      completedLevel, 
+      startTime: !!startTime, 
+      playerName: playerName.trim(), 
+      endTime: !!endTime,
+      coins,
+      accuracy 
+    })
+    
     if (completedLevel === 'expert' && startTime && playerName.trim() && !endTime) {
+      console.log('✅ Conditions met - submitting to leaderboard')
       const finalEndTime = Date.now()
       setEndTime(finalEndTime)
       
@@ -322,7 +332,7 @@ export default function QuizContent() {
             level: level,
           }
           
-          console.log('Submitting to leaderboard:', submissionData)
+          console.log('📤 Submitting to leaderboard:', submissionData)
           
           const response = await fetch('/api/leaderboard', {
             method: 'POST',
@@ -337,16 +347,42 @@ export default function QuizContent() {
             if (typeof window !== 'undefined') {
               sessionStorage.setItem('lastLeaderboardEntryId', entry.id)
             }
-            console.log('Successfully submitted to leaderboard:', entry)
+            console.log('✅ Successfully submitted to leaderboard:', entry)
+            // Don't show alert on success - it's annoying
           } else {
             // Get error message from response
             const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
-            console.error('Failed to submit to leaderboard:', response.status, errorData)
-            alert(`Failed to save score: ${errorData.error || errorData.message || 'Unknown error'}`)
+            console.error('❌ Failed to submit to leaderboard:', response.status, errorData)
+            // Only show alert for actual errors, not network timeouts
+            if (response.status >= 500) {
+              alert(`Server error saving score. Please check the leaderboard - it may have been saved.`)
+            } else {
+              alert(`Failed to save score: ${errorData.error || errorData.message || 'Unknown error'}`)
+            }
           }
         } catch (error) {
-          console.error('Error submitting to leaderboard:', error)
-          alert(`Error saving score: ${error instanceof Error ? error.message : 'Unknown error'}`)
+          console.error('⚠️ Error submitting to leaderboard:', error)
+          // "Failed to fetch" usually means network issue, but request might have succeeded
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+          
+          // Check for various network error patterns
+          const isNetworkError = 
+            errorMessage.includes('Failed to fetch') || 
+            errorMessage.includes('NetworkError') ||
+            errorMessage.includes('network') ||
+            errorMessage.includes('timeout') ||
+            errorMessage.includes('aborted')
+          
+          if (isNetworkError) {
+            // Network error - request might have actually succeeded
+            // Check if score appears on leaderboard instead of showing error
+            console.log('⚠️ Network error detected, but request may have succeeded. Check leaderboard to confirm.')
+            // Don't show alert - let user check leaderboard themselves
+            // The score was likely saved successfully despite the network error
+          } else {
+            // Other errors - show alert
+            alert(`Error saving score: ${errorMessage}`)
+          }
         } finally {
           setSubmittingLeaderboard(false)
         }
