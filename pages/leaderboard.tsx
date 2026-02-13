@@ -13,11 +13,14 @@ interface LeaderboardEntry {
   twitterHandle?: string | null
 }
 
+const ENTRIES_PER_PAGE = 10
+
 export default function Leaderboard() {
   const [entries, setEntries] = useState<LeaderboardEntry[]>([])
   const [loading, setLoading] = useState(true)
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [currentPage, setCurrentPage] = useState(1)
 
   useEffect(() => {
     // Get current user ID from sessionStorage if available
@@ -26,6 +29,11 @@ export default function Leaderboard() {
     
     fetchLeaderboard()
   }, [])
+
+  // Reset to page 1 when entries change (e.g. after retry)
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [entries.length])
 
   const fetchLeaderboard = async () => {
     setLoading(true)
@@ -60,6 +68,11 @@ export default function Leaderboard() {
     if (rank === 3) return 'text-orange-600'
     return 'text-gray-700'
   }
+
+  // Pagination: show 10 entries per page
+  const totalPages = Math.ceil(entries.length / ENTRIES_PER_PAGE) || 1
+  const startIndex = (currentPage - 1) * ENTRIES_PER_PAGE
+  const displayedEntries = entries.slice(startIndex, startIndex + ENTRIES_PER_PAGE)
 
   return (
     <>
@@ -120,8 +133,8 @@ export default function Leaderboard() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
-                    {entries.map((entry, index) => {
-                      const rank = index + 1
+                    {displayedEntries.map((entry, index) => {
+                      const rank = startIndex + index + 1
                       const isCurrentUser = entry.id === currentUserId
                       const isFirstPlace = rank === 1
                       return (
@@ -191,6 +204,29 @@ export default function Leaderboard() {
                   </tbody>
                 </table>
               </div>
+            </div>
+          )}
+
+          {/* Pagination */}
+          {!loading && !error && entries.length > ENTRIES_PER_PAGE && (
+            <div className="mt-6 flex items-center justify-center gap-2">
+              <button
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-[8px] hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-gray-100"
+              >
+                Previous
+              </button>
+              <span className="px-4 py-2 text-sm text-gray-600">
+                Page {currentPage} of {totalPages}
+              </span>
+              <button
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-[8px] hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-gray-100"
+              >
+                Next
+              </button>
             </div>
           )}
 
