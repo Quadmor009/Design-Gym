@@ -7,11 +7,13 @@
     "build": "next build",
     "start": "next start",
     "migrate": "node lib/migrations/run-migration.js",
-    "migrate:twitter": "node lib/migrations/run-migration-002.js"
+    "migrate:twitter": "node lib/migrations/run-migration-002.js",
+    "migrate:auth": "node lib/migrations/run-migration-003.js"
   },
   "dependencies": {
     "@vercel/analytics": "^1.1.1",
     "next": "^14.0.0",
+    "next-auth": "^4.24.13",
     "pg": "^8.11.3",
     "react": "^18.0.0",
     "react-dom": "^18.0.0"
@@ -28,4 +30,3 @@
     "typescript": "^5.2.2"
   }
 }
-

@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import Head from 'next/head'
+import { useSession } from 'next-auth/react'
 import { questions, foxQuote, Question } from '../data/quizData'
 
 // Configuration for questions per level - never show all questions
@@ -145,6 +146,8 @@ export default function QuizContent() {
   const [completedLevel, setCompletedLevel] = useState<'beginner' | 'mid' | 'expert' | null>(null)
   const [showInstructionModal, setShowInstructionModal] = useState(true)
   const [showNameInputModal, setShowNameInputModal] = useState(false)
+  const [isQuickPlay, setIsQuickPlay] = useState(false)
+  const [quickPlaySaved, setQuickPlaySaved] = useState(false)
   
   // Coin state - track coins silently during session
   const [coins, setCoins] = useState(0)
@@ -162,6 +165,7 @@ export default function QuizContent() {
   
   // Share tone toggle
   const [shareTone, setShareTone] = useState<'brag' | 'humble'>('brag')
+  const { data: session, status } = useSession()
 
   // Enable scrolling on quiz page
   useEffect(() => {
@@ -295,12 +299,32 @@ export default function QuizContent() {
     setShowNameInputModal(true)
   }
 
+  const handleQuickPlay = () => {
+    setIsQuickPlay(true)
+    setShowInstructionModal(false)
+    setStartTime(Date.now())
+  }
+
   const handleNameSubmit = () => {
     if (playerName.trim()) {
       setShowNameInputModal(false)
       setStartTime(Date.now())
     }
   }
+
+  // Set endTime for quick play when completion modal shows
+  useEffect(() => {
+    if (isQuickPlay && showLevelCompleteModal && completedLevel === 'expert' && !endTime) {
+      setEndTime(Date.now())
+    }
+  }, [isQuickPlay, showLevelCompleteModal, completedLevel, endTime])
+
+  // Record streak when quiz completes (signed-in users only)
+  useEffect(() => {
+    if (completedLevel === 'expert' && session?.user?.id) {
+      fetch('/api/streak', { method: 'POST' }).catch(() => {})
+    }
+  }, [completedLevel, session?.user?.id])
 
   // Auto-submit to leaderboard when session completes
   useEffect(() => {
@@ -396,6 +420,40 @@ export default function QuizContent() {
 
   const handleViewLeaderboard = () => {
     window.location.href = '/leaderboard'
+  }
+
+  const handleQuickPlaySaveToLeaderboard = async () => {
+    if (!playerName.trim() || !startTime) return
+    setSubmittingLeaderboard(true)
+    try {
+      const timeTaken = endTime ? Math.floor((endTime - startTime) / 1000) : Math.floor((Date.now() - startTime) / 1000)
+      const response = await fetch('/api/leaderboard', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: playerName.trim(),
+          score: coins,
+          accuracy: accuracy,
+          timeTaken,
+          level: 'all',
+          twitterHandle: twitterHandle.trim() || null,
+        }),
+      })
+      if (response.ok) {
+        const entry = await response.json()
+        if (typeof window !== 'undefined') {
+          sessionStorage.setItem('lastLeaderboardEntryId', entry.id)
+        }
+        setQuickPlaySaved(true)
+      } else {
+        const data = await response.json().catch(() => ({}))
+        alert(`Failed to save: ${data.error || 'Unknown error'}`)
+      }
+    } catch (error) {
+      alert(`Error saving score. Please try again.`)
+    } finally {
+      setSubmittingLeaderboard(false)
+    }
   }
 
   const handleViewStats = () => {
@@ -700,14 +758,23 @@ ${siteUrl}`
               </div>
             </div>
             
-            <div className="text-center">
+            <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
+              <button
+                onClick={handleQuickPlay}
+                className="w-full sm:w-auto px-6 sm:px-8 py-3 bg-gray-100 text-gray-900 font-normal hover:bg-gray-200 transition-colors rounded-[8px] text-sm sm:text-base border border-gray-200"
+              >
+                Quick Play
+              </button>
               <button
                 onClick={handleStartTraining}
                 className="w-full sm:w-auto px-6 sm:px-8 py-3 bg-black text-white font-normal hover:bg-gray-800 transition-colors rounded-[8px] text-sm sm:text-base"
               >
-                Start training
+                Sign up & Play
               </button>
             </div>
+            <p className="text-xs text-gray-500 text-center mt-3">
+              Quick Play lets you try it free. Sign up to save your score to the leaderboard.
+            </p>
           </div>
         </div>
       )}
@@ -772,6 +839,45 @@ ${siteUrl}`
                 <h2 className="text-xl sm:text-2xl font-normal mb-4 sm:mb-6 text-center">
                   Session Complete
                 </h2>
+
+                {/* Sign up prompt for Quick Play users */}
+                {isQuickPlay && !quickPlaySaved && (
+                  <div className="mb-6 p-4 border border-gray-200 rounded-[12px] bg-gray-50">
+                    <p className="text-sm font-medium text-gray-900 mb-3 text-center">
+                      Sign up to save your score to the leaderboard
+                    </p>
+                    <div className="space-y-3">
+                      <input
+                        type="text"
+                        value={playerName}
+                        onChange={(e) => setPlayerName(e.target.value)}
+                        placeholder="Your name"
+                        maxLength={20}
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-[8px] text-gray-900 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm"
+                      />
+                      <input
+                        type="text"
+                        value={twitterHandle}
+                        onChange={(e) => setTwitterHandle(e.target.value)}
+                        placeholder="Twitter handle (optional)"
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-[8px] text-gray-900 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm"
+                      />
+                      <button
+                        onClick={handleQuickPlaySaveToLeaderboard}
+                        disabled={!playerName.trim() || submittingLeaderboard}
+                        className="w-full px-4 py-2.5 bg-black text-white font-medium rounded-[8px] hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                      >
+                        {submittingLeaderboard ? 'Saving...' : 'Save to leaderboard'}
+                      </button>
+                    </div>
+                  </div>
+                )}
+                {isQuickPlay && quickPlaySaved && (
+                  <p className="text-sm text-green-600 font-medium text-center mb-4">
+                    Score saved! You&apos;re on the leaderboard.
+                  </p>
+                )}
+
                 <div className="mb-6">
                   <div className="mb-4 flex items-center justify-center gap-3 border-2 border-amber-200 rounded-[12px] px-6 py-4 bg-gradient-to-br from-amber-50 to-yellow-50 w-fit mx-auto">
                     <svg 
@@ -825,15 +931,17 @@ ${siteUrl}`
                 </div>
                 
                 <div className="flex flex-col sm:flex-row gap-3 mb-4">
-                  <button
-                    onClick={handleViewStats}
-                    className="w-full sm:w-1/2 px-6 sm:px-8 py-3 bg-black text-white font-normal hover:bg-gray-800 transition-colors whitespace-nowrap rounded-[8px] text-sm sm:text-base"
-                  >
-                    View Your Stats
-                  </button>
+                  {(!isQuickPlay || quickPlaySaved) && (
+                    <button
+                      onClick={handleViewStats}
+                      className="w-full sm:w-1/2 px-6 sm:px-8 py-3 bg-black text-white font-normal hover:bg-gray-800 transition-colors whitespace-nowrap rounded-[8px] text-sm sm:text-base"
+                    >
+                      View Your Stats
+                    </button>
+                  )}
                   <button
                     onClick={handleViewLeaderboard}
-                    className="w-full sm:w-1/2 px-6 sm:px-8 py-3 bg-gray-100 text-gray-900 font-normal hover:bg-gray-200 transition-colors whitespace-nowrap rounded-[8px] text-sm sm:text-base"
+                    className={`${(!isQuickPlay || quickPlaySaved) ? 'w-full sm:w-1/2' : 'w-full'} px-6 sm:px-8 py-3 bg-gray-100 text-gray-900 font-normal hover:bg-gray-200 transition-colors whitespace-nowrap rounded-[8px] text-sm sm:text-base`}
                   >
                     View Leaderboard
                   </button>

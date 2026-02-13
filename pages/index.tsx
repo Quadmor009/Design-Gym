@@ -1,5 +1,6 @@
 import Head from 'next/head'
 import Link from 'next/link'
+import { signIn, useSession } from 'next-auth/react'
 import { useState, useEffect } from 'react'
 
 // Landing page images only
@@ -21,9 +22,23 @@ const PARTNER_LOGOS = [
 ]
 
 export default function Home() {
+  const { data: session, status } = useSession()
   const [handleIndex, setHandleIndex] = useState(0)
   const [playerHandles, setPlayerHandles] = useState<string[]>([])
   const [loadingHandles, setLoadingHandles] = useState(true)
+  const [streak, setStreak] = useState<number | null>(null)
+
+  // Fetch streak when signed in
+  useEffect(() => {
+    if (session?.user?.id) {
+      fetch('/api/streak')
+        .then((r) => r.ok ? r.json() : null)
+        .then((data) => data && setStreak(data.currentStreak))
+        .catch(() => {})
+    } else {
+      setStreak(null)
+    }
+  }, [session?.user?.id])
 
   // Fetch real Twitter handles from database
   useEffect(() => {
@@ -73,6 +88,30 @@ export default function Home() {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
       <main className="h-screen overflow-hidden relative" style={{ backgroundColor: '#FAF9F7', overflowX: 'hidden', overflowY: 'hidden' }}>
+        {/* Sign up / user area - top right */}
+        <div className="absolute top-6 right-4 md:right-8 lg:right-12 xl:right-16 z-20 flex items-center gap-3">
+          {streak !== null && streak > 0 && (
+            <span className="text-sm font-medium text-gray-600 bg-gray-100 px-3 py-1.5 rounded-[8px]">
+              {streak} day streak
+            </span>
+          )}
+          {status === 'authenticated' ? (
+            <Link
+              href="/quiz"
+              className="inline-block px-5 py-2.5 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-[8px] hover:bg-gray-50 transition-colors"
+            >
+              Start Training
+            </Link>
+          ) : (
+            <button
+              onClick={() => signIn('google', { callbackUrl: '/quiz' })}
+              className="inline-block px-5 py-2.5 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-[8px] hover:bg-gray-50 transition-colors"
+            >
+              Sign up
+            </button>
+          )}
+        </div>
+
         {/* Hero Section */}
         <section className="h-full px-4 md:px-8 lg:px-12 xl:px-16 py-8 md:py-12 lg:py-16 relative">
           {/* Social Proof Strip - Bottom Left of Screen */}
@@ -152,7 +191,7 @@ export default function Home() {
                         d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" 
                       />
                     </svg>
-                    Start Training
+                    Quick Play
                   </Link>
                   <Link
                     href="/leaderboard"

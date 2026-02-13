@@ -1,4 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
+import { getServerSession } from 'next-auth'
+import { authOptions } from './auth/[...nextauth]'
 import { query } from '../../lib/db'
 
 export interface LeaderboardEntry {
@@ -106,11 +108,15 @@ export default async function handler(
       // Generate ID and timestamp
       const id = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
       const timestamp = Date.now()
+
+      // Get userId from session if signed in
+      const session = await getServerSession(req, res, authOptions)
+      const userId = session?.user?.id ?? null
       
       // Insert into database
       const insertSQL = `
-        INSERT INTO leaderboard (id, name, score, accuracy, time_taken, level, timestamp, twitter_handle)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        INSERT INTO leaderboard (id, name, score, accuracy, time_taken, level, timestamp, twitter_handle, user_id)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
         RETURNING id, name, score, accuracy, time_taken as "timeTaken", level, timestamp, twitter_handle as "twitterHandle"
       `
       
@@ -129,7 +135,8 @@ export default async function handler(
         entry.timeTaken,
         entry.level,
         timestamp,
-        twitterHandle
+        twitterHandle,
+        userId
       ])
       
       const newEntry: LeaderboardEntry = result.rows[0]
