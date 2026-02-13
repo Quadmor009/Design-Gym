@@ -148,6 +148,7 @@ export default function QuizContent() {
   const [showNameInputModal, setShowNameInputModal] = useState(false)
   const [isQuickPlay, setIsQuickPlay] = useState(false)
   const [quickPlaySaved, setQuickPlaySaved] = useState(false)
+  const [quickPlaySignUpDismissed, setQuickPlaySignUpDismissed] = useState(false)
   
   // Coin state - track coins silently during session
   const [coins, setCoins] = useState(0)
@@ -504,7 +505,7 @@ ${siteUrl}`
   const getFeedback = (accuracy: number): string => {
     if (accuracy >= 80) return 'Strong'
     if (accuracy >= 50) return 'Solid'
-    return 'Needs practice'
+    return 'Keep practicing'
   }
 
   // Get color for accuracy display
@@ -716,9 +717,12 @@ ${siteUrl}`
       {showInstructionModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white p-6 sm:p-8 max-w-lg w-full mx-4 rounded-[2rem] shadow-lg max-h-[90vh] overflow-y-auto">
-            <h2 className="text-2xl font-normal mb-8 text-center text-gray-900">
+            <h2 className="text-2xl font-normal mb-2 text-center text-gray-900">
               How Design Gym Works
             </h2>
+            <p className="text-sm text-gray-500 text-center mb-8">
+              Sharpen your visual judgment. No sign-up required to try.
+            </p>
             
             <div className="flex flex-col md:flex-row gap-6 sm:gap-8 md:gap-12 mb-6 sm:mb-8 justify-center items-center md:items-start">
               <div className="flex flex-col items-center text-center w-full md:flex-1">
@@ -773,7 +777,7 @@ ${siteUrl}`
               </button>
             </div>
             <p className="text-xs text-gray-500 text-center mt-3">
-              Quick Play lets you try it free. Sign up to save your score to the leaderboard.
+              Quick Play is free. Sign up later to save your score and track streaks.
             </p>
           </div>
         </div>
@@ -836,48 +840,14 @@ ${siteUrl}`
                     className="w-16 h-16 object-contain"
                   />
                 </div>
-                <h2 className="text-xl sm:text-2xl font-normal mb-4 sm:mb-6 text-center">
+                <h2 className="text-xl sm:text-2xl font-normal mb-2 text-center">
                   Session Complete
                 </h2>
+                <p className="text-sm text-gray-500 text-center mb-6">
+                  Nice work. Every session sharpens your eye.
+                </p>
 
-                {/* Sign up prompt for Quick Play users */}
-                {isQuickPlay && !quickPlaySaved && (
-                  <div className="mb-6 p-4 border border-gray-200 rounded-[12px] bg-gray-50">
-                    <p className="text-sm font-medium text-gray-900 mb-3 text-center">
-                      Sign up to save your score to the leaderboard
-                    </p>
-                    <div className="space-y-3">
-                      <input
-                        type="text"
-                        value={playerName}
-                        onChange={(e) => setPlayerName(e.target.value)}
-                        placeholder="Your name"
-                        maxLength={20}
-                        className="w-full px-4 py-2.5 border border-gray-300 rounded-[8px] text-gray-900 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm"
-                      />
-                      <input
-                        type="text"
-                        value={twitterHandle}
-                        onChange={(e) => setTwitterHandle(e.target.value)}
-                        placeholder="Twitter handle (optional)"
-                        className="w-full px-4 py-2.5 border border-gray-300 rounded-[8px] text-gray-900 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm"
-                      />
-                      <button
-                        onClick={handleQuickPlaySaveToLeaderboard}
-                        disabled={!playerName.trim() || submittingLeaderboard}
-                        className="w-full px-4 py-2.5 bg-black text-white font-medium rounded-[8px] hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-                      >
-                        {submittingLeaderboard ? 'Saving...' : 'Save to leaderboard'}
-                      </button>
-                    </div>
-                  </div>
-                )}
-                {isQuickPlay && quickPlaySaved && (
-                  <p className="text-sm text-green-600 font-medium text-center mb-4">
-                    Score saved! You&apos;re on the leaderboard.
-                  </p>
-                )}
-
+                {/* Results first - celebrate the achievement */}
                 <div className="mb-6">
                   <div className="mb-4 flex items-center justify-center gap-3 border-2 border-amber-200 rounded-[12px] px-6 py-4 bg-gradient-to-br from-amber-50 to-yellow-50 w-fit mx-auto">
                     <svg 
@@ -902,6 +872,55 @@ ${siteUrl}`
                     {getFeedback(accuracy)}
                   </div>
                 </div>
+
+                {/* Sign up prompt for Quick Play users - after results */}
+                {isQuickPlay && !quickPlaySaved && !quickPlaySignUpDismissed && (
+                  <div className="mb-6 p-4 border border-gray-200 rounded-[12px] bg-gray-50">
+                    <p className="text-sm font-medium text-gray-900 mb-1 text-center">
+                      Save your score to the leaderboard
+                    </p>
+                    <p className="text-xs text-gray-500 text-center mb-3">
+                      See how you rank and track your progress
+                    </p>
+                    <div className="space-y-3">
+                      <input
+                        type="text"
+                        value={playerName}
+                        onChange={(e) => setPlayerName(e.target.value)}
+                        placeholder="Your name"
+                        maxLength={20}
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-[8px] text-gray-900 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm"
+                      />
+                      <input
+                        type="text"
+                        value={twitterHandle}
+                        onChange={(e) => setTwitterHandle(e.target.value)}
+                        placeholder="Twitter handle (optional)"
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-[8px] text-gray-900 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm"
+                      />
+                      <div className="flex gap-2">
+                        <button
+                          onClick={handleQuickPlaySaveToLeaderboard}
+                          disabled={!playerName.trim() || submittingLeaderboard}
+                          className="flex-1 px-4 py-2.5 bg-black text-white font-medium rounded-[8px] hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                        >
+                          {submittingLeaderboard ? 'Saving...' : 'Save'}
+                        </button>
+                        <button
+                          onClick={() => setQuickPlaySignUpDismissed(true)}
+                          className="px-4 py-2.5 text-sm text-gray-500 hover:text-gray-700"
+                        >
+                          Maybe later
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {isQuickPlay && quickPlaySaved && (
+                  <p className="text-sm text-green-600 font-medium text-center mb-4">
+                    Score saved! You&apos;re on the leaderboard.
+                  </p>
+                )}
                 
                 {/* Share Tone Toggle */}
                 <div className="mb-4">
@@ -930,33 +949,31 @@ ${siteUrl}`
                   </div>
                 </div>
                 
-                <div className="flex flex-col sm:flex-row gap-3 mb-4">
+                <div className="flex flex-col sm:flex-row gap-3 mb-3">
                   {(!isQuickPlay || quickPlaySaved) && (
                     <button
                       onClick={handleViewStats}
-                      className="w-full sm:w-1/2 px-6 sm:px-8 py-3 bg-black text-white font-normal hover:bg-gray-800 transition-colors whitespace-nowrap rounded-[8px] text-sm sm:text-base"
+                      className="flex-1 px-6 sm:px-8 py-3 bg-black text-white font-normal hover:bg-gray-800 transition-colors whitespace-nowrap rounded-[8px] text-sm sm:text-base"
                     >
                       View Your Stats
                     </button>
                   )}
                   <button
                     onClick={handleViewLeaderboard}
-                    className={`${(!isQuickPlay || quickPlaySaved) ? 'w-full sm:w-1/2' : 'w-full'} px-6 sm:px-8 py-3 bg-gray-100 text-gray-900 font-normal hover:bg-gray-200 transition-colors whitespace-nowrap rounded-[8px] text-sm sm:text-base`}
+                    className="flex-1 px-6 sm:px-8 py-3 bg-black text-white font-normal hover:bg-gray-800 transition-colors whitespace-nowrap rounded-[8px] text-sm sm:text-base"
                   >
                     View Leaderboard
                   </button>
                 </div>
-                <div className="flex flex-col sm:flex-row gap-3 mb-4">
-                  <button
-                    onClick={handleShareOnTwitter}
-                    className="w-full px-6 sm:px-8 py-3 bg-blue-500 text-white font-normal hover:bg-blue-600 transition-colors whitespace-nowrap flex items-center justify-center gap-2 rounded-[8px] text-sm sm:text-base"
-                  >
-                    <svg className="w-5 h-5 sm:w-7 sm:h-7 fill-current" viewBox="0 0 24 24" aria-hidden="true">
-                      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-                    </svg>
-                    Share on X
-                  </button>
-                </div>
+                <button
+                  onClick={handleShareOnTwitter}
+                  className="w-full mb-4 px-6 sm:px-8 py-3 bg-gray-100 text-gray-900 font-normal hover:bg-gray-200 transition-colors whitespace-nowrap flex items-center justify-center gap-2 rounded-[8px] text-sm sm:text-base border border-gray-200"
+                >
+                  <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                  </svg>
+                  Share on X
+                </button>
                 <div className="text-center pt-4 border-t border-gray-200">
                   <button
                     onClick={handleStartOver}
