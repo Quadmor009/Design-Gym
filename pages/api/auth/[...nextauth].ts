@@ -9,6 +9,11 @@ export const authOptions: NextAuthOptions = {
       clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
     }),
   ],
+  events: {
+    async signInError({ error }) {
+      console.error('[NextAuth] signInError:', error)
+    },
+  },
   callbacks: {
     async signIn({ user }) {
       if (!user.email) return false
@@ -48,6 +53,7 @@ export const authOptions: NextAuthOptions = {
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   secret: process.env.NEXTAUTH_SECRET,
+  debug: true,
 }
 
 export default NextAuth(authOptions)

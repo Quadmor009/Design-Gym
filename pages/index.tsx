@@ -1,5 +1,6 @@
 import Head from 'next/head'
 import Link from 'next/link'
+import { useRouter } from 'next/router'
 import { useSession } from 'next-auth/react'
 import { useState, useEffect } from 'react'
 
@@ -22,11 +23,20 @@ const PARTNER_LOGOS = [
 ]
 
 export default function Home() {
+  const router = useRouter()
   const { data: session, status } = useSession()
   const [handleIndex, setHandleIndex] = useState(0)
   const [playerHandles, setPlayerHandles] = useState<string[]>([])
   const [loadingHandles, setLoadingHandles] = useState(true)
   const [streak, setStreak] = useState<number | null>(null)
+
+  // Redirect auth errors to the dedicated error page
+  useEffect(() => {
+    const err = router.query.error as string
+    if (err) {
+      router.replace(`/auth/error?error=${encodeURIComponent(err)}`, undefined, { shallow: false })
+    }
+  }, [router.query.error])
 
   // Fetch streak when signed in
   useEffect(() => {

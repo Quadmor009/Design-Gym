@@ -3,11 +3,12 @@ import Link from 'next/link'
 import { useRouter } from 'next/router'
 
 const ERROR_TIPS: Record<string, string> = {
-  Configuration: 'Check that GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, NEXTAUTH_URL, and NEXTAUTH_SECRET are set in .env.local. Restart the dev server after changes.',
+  Configuration: 'Check that GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, NEXTAUTH_URL, and NEXTAUTH_SECRET are set. Restart or redeploy after env changes.',
   AccessDenied: 'You may have denied access. Try again in a new tab or incognito window.',
-  OAuthCallback: 'The redirect URI might be wrong. In Google Console → Credentials → your OAuth client → add exactly: http://localhost:3000/api/auth/callback/google',
+  OAuthCallback: 'The redirect URI might be wrong. In Google Console → Credentials → your OAuth client → add the correct callback URL.',
   OAuthCreateAccount: 'Could not create account. Run: npm run migrate:auth',
-  redirect_uri_mismatch: 'In Google Cloud Console → Credentials → your OAuth client → Authorized redirect URIs, add exactly: http://localhost:3000/api/auth/callback/google (no trailing slash)',
+  redirect_uri_mismatch: 'In Google Cloud Console → Credentials → your OAuth client → Authorized redirect URIs, add exactly: https://design-quiz-rho.vercel.app/api/auth/callback/google (no trailing slash)',
+  google: 'Google OAuth failed. In Vercel → Project → Logs, trigger sign-in and look for [NextAuth] errors. Check: (1) OAuth consent screen is Published or your email is a test user, (2) Authorized redirect URIs include https://design-quiz-rho.vercel.app/api/auth/callback/google, (3) Authorized JavaScript origins include https://design-quiz-rho.vercel.app',
   default: 'See SETUP_AUTH.md in the project for step-by-step setup.',
 }
 
