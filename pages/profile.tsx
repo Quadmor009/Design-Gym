@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import Head from 'next/head'
 import Link from 'next/link'
-import { useSession } from 'next-auth/react'
+import { useSession, signOut } from 'next-auth/react'
 
 interface ProfileData {
   user: { name?: string | null; email?: string | null; image?: string | null }
@@ -173,7 +173,7 @@ export default function Profile() {
           </div>
 
           {/* Actions */}
-          <div className="flex flex-col sm:flex-row gap-3">
+          <div className="flex flex-col sm:flex-row gap-3 mb-6">
             <Link
               href="/quiz"
               className="flex-1 px-6 py-3 bg-black text-white font-medium rounded-[8px] hover:bg-gray-800 text-center transition-colors"
@@ -192,6 +192,17 @@ export default function Profile() {
             >
               Home
             </Link>
+          </div>
+          <div className="flex justify-center">
+            <button
+              onClick={() => signOut({ callbackUrl: '/' })}
+              className="flex items-center gap-2 text-sm text-red-600 hover:text-red-700 transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+              Log out
+            </button>
           </div>
         </div>
       </main>
