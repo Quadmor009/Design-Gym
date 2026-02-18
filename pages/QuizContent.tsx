@@ -1,6 +1,8 @@
 import { useState, useEffect, useMemo } from 'react'
+import { createPortal } from 'react-dom'
 import Head from 'next/head'
-import { useSession } from 'next-auth/react'
+import Link from 'next/link'
+import { useSession, signIn } from 'next-auth/react'
 import { questions, foxQuote, Question } from '../data/quizData'
 
 // Configuration for questions per level - never show all questions
@@ -145,10 +147,10 @@ export default function QuizContent() {
   const [showLevelCompleteModal, setShowLevelCompleteModal] = useState(false)
   const [completedLevel, setCompletedLevel] = useState<'beginner' | 'mid' | 'expert' | null>(null)
   const [showInstructionModal, setShowInstructionModal] = useState(true)
-  const [showNameInputModal, setShowNameInputModal] = useState(false)
   const [isQuickPlay, setIsQuickPlay] = useState(false)
   const [quickPlaySaved, setQuickPlaySaved] = useState(false)
   const [quickPlaySignUpDismissed, setQuickPlaySignUpDismissed] = useState(false)
+  const [showLeaveConfirmModal, setShowLeaveConfirmModal] = useState(false)
   
   // Coin state - track coins silently during session
   const [coins, setCoins] = useState(0)
@@ -175,6 +177,17 @@ export default function QuizContent() {
       document.body.classList.remove('quiz-page')
     }
   }, [])
+
+  // Warn user before leaving mid-session (forfeit progress)
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (startTime && !completedLevel) {
+        e.preventDefault()
+      }
+    }
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
+  }, [startTime, completedLevel])
 
   // Scroll to top when question changes
   useEffect(() => {
@@ -297,20 +310,14 @@ export default function QuizContent() {
 
   const handleStartTraining = () => {
     setShowInstructionModal(false)
-    setShowNameInputModal(true)
+    setPlayerName(session?.user?.name || session?.user?.email?.split('@')[0] || 'Player')
+    setStartTime(Date.now())
   }
 
   const handleQuickPlay = () => {
     setIsQuickPlay(true)
     setShowInstructionModal(false)
     setStartTime(Date.now())
-  }
-
-  const handleNameSubmit = () => {
-    if (playerName.trim()) {
-      setShowNameInputModal(false)
-      setStartTime(Date.now())
-    }
   }
 
   // Set endTime for quick play when completion modal shows
@@ -550,9 +557,29 @@ ${siteUrl}`
       </Head>
 
       <main className="min-h-screen bg-white px-3 sm:px-6 py-6 sm:py-12 md:px-12 md:py-16 w-full overflow-x-hidden">
-        {/* Fixed coin counter at top-right */}
-        <div className="fixed top-2 right-2 sm:top-8 sm:right-8 md:top-12 md:right-12 z-10">
-          <div className="flex items-center justify-center gap-1.5 sm:gap-2 border-2 border-amber-200 rounded-[12px] px-2.5 sm:px-4 py-1.5 sm:py-2.5 bg-gradient-to-br from-amber-50 to-yellow-50">
+        {/* Fixed profile + coin counter at top-right */}
+        <div className="fixed top-2 right-2 sm:top-8 sm:right-8 md:top-12 md:right-12 z-10 flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              if (startTime && !completedLevel) {
+                setShowLeaveConfirmModal(true)
+              } else {
+                window.location.href = session ? '/profile' : '/'
+              }
+            }}
+            className="flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-full border-2 border-gray-200 bg-gray-100 overflow-hidden flex-shrink-0 hover:bg-gray-200 transition-colors cursor-pointer"
+            title="Your session"
+          >
+            {session?.user?.image ? (
+              <img src={session.user.image} alt="Profile" className="w-full h-full object-cover" />
+            ) : (
+              <svg className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+            )}
+          </button>
+          <div className="flex items-center justify-center gap-1.5 sm:gap-2 border-2 border-amber-200 rounded-[12px] px-2.5 sm:px-4 py-1.5 sm:py-2.5 bg-gradient-to-br from-amber-50 to-yellow-50" title="Coins earned this session">
             <svg 
               key={`coin-${coins}`}
               className={`w-4 h-4 sm:w-5 sm:h-5 ${isCoinAnimating ? 'coin-animate' : ''}`}
@@ -568,6 +595,36 @@ ${siteUrl}`
             <span className="text-xs sm:text-sm font-semibold text-amber-900">{coins}</span>
           </div>
         </div>
+
+        {/* Leave confirmation modal - portal to body so it's always on top */}
+        {showLeaveConfirmModal && typeof document !== 'undefined' && createPortal(
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4">
+            <div
+              className="bg-white p-6 sm:p-8 max-w-sm w-full rounded-[2rem] shadow-lg"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <p className="text-center text-gray-900 mb-6">
+                Leaving forfeits progress
+              </p>
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowLeaveConfirmModal(false)}
+                  className="flex-1 px-4 py-3 bg-gray-100 text-gray-900 font-medium rounded-[8px] hover:bg-gray-200 transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <Link
+                  href="/profile"
+                  className="flex-1 px-4 py-3 bg-black text-white font-medium rounded-[8px] hover:bg-gray-800 transition-colors cursor-pointer text-center block"
+                >
+                  Continue
+                </Link>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
         <div className="max-w-6xl mx-auto w-full px-0">
           <div className="mb-8 sm:mb-12 text-center">
             <div className="text-lg sm:text-xl md:text-2xl font-medium text-black mb-3 sm:mb-4 tracking-normal" style={{ fontFamily: 'Inter, system-ui, -apple-system, sans-serif', letterSpacing: '0.02em' }}>
@@ -763,21 +820,34 @@ ${siteUrl}`
             </div>
             
             <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
-              <button
-                onClick={handleQuickPlay}
-                className="w-full sm:w-auto px-6 sm:px-8 py-3 bg-gray-100 text-gray-900 font-normal hover:bg-gray-200 transition-colors rounded-[8px] text-sm sm:text-base border border-gray-200"
-              >
-                Quick Play
-              </button>
-              <button
-                onClick={handleStartTraining}
-                className="w-full sm:w-auto px-6 sm:px-8 py-3 bg-black text-white font-normal hover:bg-gray-800 transition-colors rounded-[8px] text-sm sm:text-base"
-              >
-                Sign up & Play
-              </button>
+              {status === 'authenticated' ? (
+                <button
+                  onClick={handleStartTraining}
+                  className="w-full sm:w-auto px-6 sm:px-8 py-3 bg-black text-white font-normal hover:bg-gray-800 transition-colors rounded-[8px] text-sm sm:text-base"
+                >
+                  Start Training
+                </button>
+              ) : (
+                <>
+                  <button
+                    onClick={handleQuickPlay}
+                    className="w-full sm:w-auto px-6 sm:px-8 py-3 bg-gray-100 text-gray-900 font-normal hover:bg-gray-200 transition-colors rounded-[8px] text-sm sm:text-base border border-gray-200"
+                  >
+                    Quick Play
+                  </button>
+                  <button
+                    onClick={() => signIn('google', { callbackUrl: '/quiz' })}
+                    className="w-full sm:w-auto px-6 sm:px-8 py-3 bg-black text-white font-normal hover:bg-gray-800 transition-colors rounded-[8px] text-sm sm:text-base"
+                  >
+                    Sign up with Google
+                  </button>
+                </>
+              )}
             </div>
             <p className="text-xs text-gray-500 text-center mt-3">
-              Quick Play is free. Sign up later to save your score and track streaks.
+              {status === 'authenticated'
+                ? 'Your score will be saved to the leaderboard.'
+                : 'Quick Play is free. Sign up with Google to save your score and track streaks.'}
             </p>
           </div>
         </div>
@@ -988,75 +1058,6 @@ ${siteUrl}`
         </div>
       )}
 
-      {/* Name Input Modal - appears before session starts */}
-      {showNameInputModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white p-6 sm:p-8 max-w-md w-full mx-4 rounded-[2rem] shadow-lg">
-            <h2 className="text-xl sm:text-2xl font-normal mb-4 text-center text-gray-900">
-              Connect Your Account
-            </h2>
-            <p className="text-gray-600 mb-6 text-center text-xs sm:text-sm">
-              Your name will appear on the leaderboard
-            </p>
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Your Name *
-              </label>
-              <input
-                type="text"
-                value={playerName}
-                onChange={(e) => setPlayerName(e.target.value)}
-                placeholder="Your name"
-                maxLength={20}
-                className="w-full px-4 py-3 border border-gray-300 rounded-[8px] text-gray-900 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm sm:text-base"
-                onKeyPress={(e) => {
-                  if (e.key === 'Enter' && playerName.trim()) {
-                    handleNameSubmit()
-                  }
-                }}
-                autoFocus
-              />
-            </div>
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Twitter Handle (Optional)
-              </label>
-              <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm sm:text-base pointer-events-none">@</span>
-                <input
-                  type="text"
-                  value={twitterHandle}
-                  onChange={(e) => {
-                    // Remove @ if user types it (we show it as a prefix)
-                    const value = e.target.value.replace('@', '')
-                    setTwitterHandle(value)
-                  }}
-                  placeholder="yourhandle"
-                  maxLength={15}
-                  className="w-full pl-8 pr-4 py-3 border border-gray-300 rounded-[8px] text-gray-900 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-sm sm:text-base"
-                  onKeyPress={(e) => {
-                    if (e.key === 'Enter' && playerName.trim()) {
-                      handleNameSubmit()
-                    }
-                  }}
-                />
-              </div>
-              <p className="text-xs text-gray-500 mt-1">
-                Connect your Twitter to appear in social proof
-              </p>
-            </div>
-            <div className="text-center">
-              <button
-                onClick={handleNameSubmit}
-                disabled={!playerName.trim()}
-                className="w-full sm:w-auto px-6 sm:px-8 py-3 bg-black text-white font-normal hover:bg-gray-800 transition-colors rounded-[8px] disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
-              >
-                Start Training
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </>
   )
 }
