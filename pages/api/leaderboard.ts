@@ -109,16 +109,14 @@ export default async function handler(
       const id = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
       const timestamp = Date.now()
 
-      // Get userId from session if signed in
-      const session = await getServerSession(req, res, authOptions)
-      const userId = session?.user?.id ?? null
-      
-      // Insert into database
-      const insertSQL = `
-        INSERT INTO leaderboard (id, name, score, accuracy, time_taken, level, timestamp, twitter_handle, user_id)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-        RETURNING id, name, score, accuracy, time_taken as "timeTaken", level, timestamp, twitter_handle as "twitterHandle"
-      `
+      // Get userId from session if signed in (optional - score saves even without it)
+      let session
+      try {
+        session = await getServerSession(req, res, authOptions)
+      } catch (sessionErr) {
+        console.warn('Session fetch failed, saving without user link:', sessionErr)
+      }
+      let userId = (session?.user as { id?: string } | undefined)?.id ?? null
       
       // Normalize Twitter handle (remove @ if present, add it back)
       const twitterHandle = entry.twitterHandle 
@@ -127,17 +125,28 @@ export default async function handler(
           : `@${entry.twitterHandle}`
         : null
       
-      const result = await query(insertSQL, [
-        id,
-        entry.name,
-        entry.score,
-        entry.accuracy,
-        entry.timeTaken,
-        entry.level,
-        timestamp,
-        twitterHandle,
-        userId
-      ])
+      const insertSQL = `
+        INSERT INTO leaderboard (id, name, score, accuracy, time_taken, level, timestamp, twitter_handle, user_id)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        RETURNING id, name, score, accuracy, time_taken as "timeTaken", level, timestamp, twitter_handle as "twitterHandle"
+      `
+      
+      const params = [id, entry.name, entry.score, entry.accuracy, entry.timeTaken, entry.level, timestamp, twitterHandle, userId]
+      
+      let result
+      try {
+        result = await query(insertSQL, params)
+      } catch (insertErr: unknown) {
+        // Retry without user_id if FK violation or other user-related error (ensures score is never lost)
+        const errMsg = insertErr instanceof Error ? insertErr.message : String(insertErr)
+        const isUserRelated = errMsg.includes('foreign key') || errMsg.includes('violates') || (insertErr as { code?: string })?.code === '23503'
+        if (userId && isUserRelated) {
+          console.warn('Insert with user_id failed, retrying without:', errMsg)
+          result = await query(insertSQL, [id, entry.name, entry.score, entry.accuracy, entry.timeTaken, entry.level, timestamp, twitterHandle, null])
+        } else {
+          throw insertErr
+        }
+      }
       
       const newEntry: LeaderboardEntry = result.rows[0]
       
