@@ -100,10 +100,11 @@ export default async function handler(
         return res.status(400).json({ error: 'Missing required fields' })
       }
       
-      // Validate level
-      if (!['beginner', 'mid', 'expert', 'all'].includes(entry.level)) {
-        return res.status(400).json({ error: 'Invalid level' })
-      }
+      // Coerce to numbers (client may send strings)
+      const score = Number(entry.score) || 0
+      const accuracy = Number(entry.accuracy) || 0
+      const timeTaken = Number(entry.timeTaken) || 0
+      const level = ['beginner', 'mid', 'expert', 'all'].includes(entry.level) ? entry.level : 'all'
       
       // Generate ID and timestamp
       const id = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
@@ -131,18 +132,21 @@ export default async function handler(
         RETURNING id, name, score, accuracy, time_taken as "timeTaken", level, timestamp, twitter_handle as "twitterHandle"
       `
       
-      const params = [id, entry.name, entry.score, entry.accuracy, entry.timeTaken, entry.level, timestamp, twitterHandle, userId]
+      const params = [id, String(entry.name).trim(), score, accuracy, timeTaken, level, timestamp, twitterHandle, userId]
       
       let result
       try {
         result = await query(insertSQL, params)
       } catch (insertErr: unknown) {
-        // Retry without user_id if FK violation or other user-related error (ensures score is never lost)
-        const errMsg = insertErr instanceof Error ? insertErr.message : String(insertErr)
-        const isUserRelated = errMsg.includes('foreign key') || errMsg.includes('violates') || (insertErr as { code?: string })?.code === '23503'
-        if (userId && isUserRelated) {
-          console.warn('Insert with user_id failed, retrying without:', errMsg)
-          result = await query(insertSQL, [id, entry.name, entry.score, entry.accuracy, entry.timeTaken, entry.level, timestamp, twitterHandle, null])
+        // Always retry without user_id - ensures score is NEVER lost (FK, connection, or other errors)
+        if (userId) {
+          console.warn('Insert with user_id failed, retrying without user link:', insertErr)
+          try {
+            result = await query(insertSQL, [id, String(entry.name).trim(), score, accuracy, timeTaken, level, timestamp, twitterHandle, null])
+          } catch (retryErr) {
+            console.error('Retry without user_id also failed:', retryErr)
+            throw retryErr
+          }
         } else {
           throw insertErr
         }
@@ -174,6 +178,7 @@ export default async function handler(
       res.status(500).json({ 
         error: 'Internal server error',
         message: errorDetails,
+        hint: 'If using Render Postgres, try the connection pooler URL in Dashboard. Ensure DATABASE_URL is set in Vercel env vars.',
         ...(process.env.NODE_ENV !== 'production' && { details: errorMessage })
       })
     }

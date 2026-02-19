@@ -30,9 +30,10 @@ export function getDbPool(): Pool {
     pool = new Pool({
       connectionString,
       ssl: { rejectUnauthorized: false },
-      // Add connection timeout and retry settings
-      connectionTimeoutMillis: 5000,
-      idleTimeoutMillis: 30000,
+      connectionTimeoutMillis: 10000,
+      idleTimeoutMillis: 10000,
+      // Serverless: limit connections per instance to avoid exhausting Render/DB limits
+      max: process.env.VERCEL ? 2 : 10,
     })
 
     // Handle pool errors
