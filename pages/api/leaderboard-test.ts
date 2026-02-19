@@ -40,11 +40,11 @@ export default async function handler(
     )
     result.leaderboardColumns = tableCheck.rows.map((r: { column_name: string }) => r.column_name)
 
-    // Test 3: Attempt a real insert (then delete)
+    // Test 3: Attempt a real insert (then delete) - no user_id (column may not exist)
     const testId = `test-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
     try {
       await query(
-        `INSERT INTO leaderboard (id, name, score, accuracy, time_taken, level, timestamp, user_id)
+        `INSERT INTO leaderboard (id, name, score, accuracy, time_taken, level, timestamp, twitter_handle)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
         [testId, 'Test User', 100, 50, 60, 'all', Date.now(), null]
       )

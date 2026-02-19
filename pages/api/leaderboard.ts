@@ -1,6 +1,4 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
-import { getServerSession } from 'next-auth'
-import { authOptions } from './auth/[...nextauth]'
 import { query } from '../../lib/db'
 
 export interface LeaderboardEntry {
@@ -110,14 +108,7 @@ export default async function handler(
       const id = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
       const timestamp = Date.now()
 
-      // Get userId from session if signed in (optional - score saves even without it)
-      let session
-      try {
-        session = await getServerSession(req, res, authOptions)
-      } catch (sessionErr) {
-        console.warn('Session fetch failed, saving without user link:', sessionErr)
-      }
-      let userId = (session?.user as { id?: string } | undefined)?.id ?? null
+      // Note: user_id column doesn't exist in production (migration 003 not run)
       
       // Normalize Twitter handle (remove @ if present, add it back)
       const twitterHandle = entry.twitterHandle 
@@ -126,61 +117,16 @@ export default async function handler(
           : `@${entry.twitterHandle}`
         : null
       
-      // Minimal insert fallback - only base columns (works if migrations 002/003 not run)
-      const minimalSQL = `
-        INSERT INTO leaderboard (id, name, score, accuracy, time_taken, level, timestamp)
-        VALUES ($1, $2, $3, $4, $5, $6, $7)
-        RETURNING id, name, score, accuracy, time_taken as "timeTaken", level, timestamp
-      `
-      const fullSQL = `
-        INSERT INTO leaderboard (id, name, score, accuracy, time_taken, level, timestamp, twitter_handle, user_id)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+      // Production DB has twitter_handle but not user_id (migration 003 not run)
+      const insertSQL = `
+        INSERT INTO leaderboard (id, name, score, accuracy, time_taken, level, timestamp, twitter_handle)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
         RETURNING id, name, score, accuracy, time_taken as "timeTaken", level, timestamp, twitter_handle as "twitterHandle"
       `
+      const params = [id, String(entry.name).trim(), score, accuracy, timeTaken, level, timestamp, twitterHandle]
       
-      const baseParams = [id, String(entry.name).trim(), score, accuracy, timeTaken, level, timestamp]
-      const fullParams = [...baseParams, twitterHandle, userId]
-      const fallbackParams = [...baseParams, twitterHandle, null]
-      
-      let result
-      try {
-        result = await query(fullSQL, fullParams)
-      } catch (insertErr: unknown) {
-        // Retry without user_id (FK or user-related)
-        if (userId) {
-          try {
-            result = await query(fullSQL, fallbackParams)
-          } catch (retryErr) {
-            // Last resort: minimal insert (no user_id, no twitter_handle) - ensures score is NEVER lost
-            console.warn('Full insert failed, trying minimal:', retryErr)
-            try {
-              result = await query(minimalSQL, baseParams)
-            } catch (minimalErr) {
-              console.error('All insert attempts failed:', { insertErr, retryErr, minimalErr })
-              throw minimalErr
-            }
-          }
-        } else {
-          // Try minimal in case twitter_handle or other column causes issues
-          try {
-            result = await query(minimalSQL, baseParams)
-          } catch (minimalErr) {
-            throw insertErr
-          }
-        }
-      }
-      
-      const row = result.rows[0]
-      const newEntry: LeaderboardEntry = {
-        id: row.id,
-        name: row.name,
-        score: row.score,
-        accuracy: row.accuracy,
-        timeTaken: row.timeTaken,
-        level: row.level,
-        timestamp: row.timestamp,
-        twitterHandle: row.twitterHandle ?? null,
-      }
+      const result = await query(insertSQL, params)
+      const newEntry: LeaderboardEntry = result.rows[0]
       
       res.status(201).json(newEntry)
       
