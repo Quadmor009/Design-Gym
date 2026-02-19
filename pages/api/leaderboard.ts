@@ -126,33 +126,61 @@ export default async function handler(
           : `@${entry.twitterHandle}`
         : null
       
-      const insertSQL = `
+      // Minimal insert fallback - only base columns (works if migrations 002/003 not run)
+      const minimalSQL = `
+        INSERT INTO leaderboard (id, name, score, accuracy, time_taken, level, timestamp)
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
+        RETURNING id, name, score, accuracy, time_taken as "timeTaken", level, timestamp
+      `
+      const fullSQL = `
         INSERT INTO leaderboard (id, name, score, accuracy, time_taken, level, timestamp, twitter_handle, user_id)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
         RETURNING id, name, score, accuracy, time_taken as "timeTaken", level, timestamp, twitter_handle as "twitterHandle"
       `
       
-      const params = [id, String(entry.name).trim(), score, accuracy, timeTaken, level, timestamp, twitterHandle, userId]
+      const baseParams = [id, String(entry.name).trim(), score, accuracy, timeTaken, level, timestamp]
+      const fullParams = [...baseParams, twitterHandle, userId]
+      const fallbackParams = [...baseParams, twitterHandle, null]
       
       let result
       try {
-        result = await query(insertSQL, params)
+        result = await query(fullSQL, fullParams)
       } catch (insertErr: unknown) {
-        // Always retry without user_id - ensures score is NEVER lost (FK, connection, or other errors)
+        // Retry without user_id (FK or user-related)
         if (userId) {
-          console.warn('Insert with user_id failed, retrying without user link:', insertErr)
           try {
-            result = await query(insertSQL, [id, String(entry.name).trim(), score, accuracy, timeTaken, level, timestamp, twitterHandle, null])
+            result = await query(fullSQL, fallbackParams)
           } catch (retryErr) {
-            console.error('Retry without user_id also failed:', retryErr)
-            throw retryErr
+            // Last resort: minimal insert (no user_id, no twitter_handle) - ensures score is NEVER lost
+            console.warn('Full insert failed, trying minimal:', retryErr)
+            try {
+              result = await query(minimalSQL, baseParams)
+            } catch (minimalErr) {
+              console.error('All insert attempts failed:', { insertErr, retryErr, minimalErr })
+              throw minimalErr
+            }
           }
         } else {
-          throw insertErr
+          // Try minimal in case twitter_handle or other column causes issues
+          try {
+            result = await query(minimalSQL, baseParams)
+          } catch (minimalErr) {
+            throw insertErr
+          }
         }
       }
       
-      const newEntry: LeaderboardEntry = result.rows[0]
+      const row = result.rows[0]
+      const newEntry: LeaderboardEntry = {
+        id: row.id,
+        name: row.name,
+        score: row.score,
+        accuracy: row.accuracy,
+        timeTaken: row.timeTaken,
+        level: row.level,
+        timestamp: row.timestamp,
+        twitterHandle: row.twitterHandle ?? null,
+      }
       
       res.status(201).json(newEntry)
       
