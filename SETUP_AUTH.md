@@ -11,7 +11,7 @@ Follow these steps to get Google Sign-In working.
 3. Go to **APIs & Services** → **Credentials**
 4. Click **+ CREATE CREDENTIALS** → **OAuth client ID**
 5. If prompted, configure the OAuth consent screen:
-   - User type: **External** (or Internal if it’s a workspace)
+   - User type: **External** (or Internal if it's a workspace)
    - App name: `Design Gym`
    - User support email: your email
    - Developer contact: your email
@@ -95,7 +95,7 @@ npm run dev
 | Error | Fix |
 |-------|-----|
 | `Configuration` | Check that `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `NEXTAUTH_URL`, and `NEXTAUTH_SECRET` are set in `.env.local` and that you restarted the dev server. |
-| `redirect_uri_mismatch` | In Google Console, ensure the redirect URI is exactly `http://localhost:3000/api/auth/callback/google` (no extra slash, http for local). |
+| `redirect_uri_mismatch` | In Google Console, ensure the redirect URI is exactly `http://localhost:3000/api/auth/callback/google` (no extra slash, http for local). Visit `/api/auth/oauth-check` for the exact value. |
 | `AccessDenied` | You may have denied access or hit a consent screen issue. Try again in a private/incognito window. |
 | Database errors on sign-in | Run `npm run migrate:auth` and confirm `DATABASE_URL` is correct. |
 

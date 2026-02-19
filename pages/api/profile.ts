@@ -14,15 +14,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(401).json({ error: 'Not authenticated' })
   }
 
-  // Get user id - from session or look up by email
-  let userId = (session.user as { id?: string }).id
-  if (!userId && session.user.email) {
-    try {
-      const userRow = await query('SELECT id FROM users WHERE email = $1', [session.user.email])
-      userId = userRow.rows[0]?.id
-    } catch {
-      userId = session.user.email
-    }
+  // User id from session (set by JWT callback - Twitter/Google both provide id)
+  const userId = (session.user as { id?: string }).id
+  if (!userId) {
+    return res.status(401).json({ error: 'User ID not found' })
   }
 
   const userName = session.user.name || session.user.email?.split('@')[0] || 'Designer'
@@ -94,7 +89,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     res.status(200).json({
       user: {
         name: session.user.name,
-        email: session.user.email,
+        email: session.user.email ?? null,
         image: session.user.image,
       },
       streak: currentStreak,
@@ -110,7 +105,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     res.status(200).json({
       user: {
         name: session.user.name,
-        email: session.user.email,
+        email: session.user.email ?? null,
         image: session.user.image,
       },
       streak: 0,

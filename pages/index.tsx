@@ -1,7 +1,7 @@
 import Head from 'next/head'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
-import { useSession } from 'next-auth/react'
+import { useSession, signIn } from 'next-auth/react'
 import { useState, useEffect } from 'react'
 
 // Landing page images only
@@ -113,12 +113,13 @@ export default function Home() {
               Your activity
             </Link>
           ) : (
-            <a
-              href="/api/auth/signin/google?callbackUrl=/quiz"
+            <button
+              type="button"
+              onClick={() => signIn('google', { callbackUrl: '/quiz' })}
               className="inline-block px-5 py-2.5 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-[8px] hover:bg-gray-50 transition-colors cursor-pointer"
             >
               Sign up
-            </a>
+            </button>
           )}
         </div>
 

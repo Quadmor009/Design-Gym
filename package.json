@@ -8,7 +8,8 @@
     "start": "next start",
     "migrate": "node lib/migrations/run-migration.js",
     "migrate:twitter": "node lib/migrations/run-migration-002.js",
-    "migrate:auth": "node lib/migrations/run-migration-003.js"
+    "migrate:auth": "node lib/migrations/run-migration-003.js",
+    "migrate:twitter-auth": "node lib/migrations/run-migration-004.js"
   },
   "dependencies": {
     "@vercel/analytics": "^1.1.1",

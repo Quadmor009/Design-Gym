@@ -1,20 +1,28 @@
 import Head from 'next/head'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
+import { useEffect, useState } from 'react'
 
-const ERROR_TIPS: Record<string, string> = {
-  Configuration: 'Check that GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, NEXTAUTH_URL, and NEXTAUTH_SECRET are set. Restart or redeploy after env changes.',
-  AccessDenied: 'You may have denied access. Try again in a new tab or incognito window.',
-  OAuthCallback: 'The redirect URI might be wrong. In Google Console → Credentials → your OAuth client → add the correct callback URL.',
-  OAuthCreateAccount: 'Could not create account. Run: npm run migrate:auth',
-  redirect_uri_mismatch: 'In Google Cloud Console → Credentials → your OAuth client → Authorized redirect URIs, add exactly: https://design-quiz-rho.vercel.app/api/auth/callback/google (no trailing slash)',
-  google: 'Google OAuth failed. In Vercel → Project → Logs, trigger sign-in and look for [NextAuth] errors. Check: (1) OAuth consent screen is Published or your email is a test user, (2) Authorized redirect URIs include https://design-quiz-rho.vercel.app/api/auth/callback/google, (3) Authorized JavaScript origins include https://design-quiz-rho.vercel.app',
-  default: 'See SETUP_AUTH.md in the project for step-by-step setup.',
+function getErrorTip(error: string, origin: string): string {
+  const base = origin || 'https://your-site.vercel.app'
+  const callbackUrl = `${base}/api/auth/callback/google`
+  const tips: Record<string, string> = {
+    Configuration: 'Check that GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, NEXTAUTH_URL, and NEXTAUTH_SECRET are set in Vercel env vars. Redeploy after changes.',
+    AccessDenied: 'You may have denied access. Try again in a new tab or incognito window.',
+    OAuthCallback: `The redirect URI might be wrong. In Google Console → Credentials → add: ${callbackUrl}`,
+    OAuthCreateAccount: 'Could not create account. Run: npm run migrate:auth',
+    redirect_uri_mismatch: `In Google Cloud Console → Credentials → Authorized redirect URIs, add exactly: ${callbackUrl} (no trailing slash)`,
+    google: `Google OAuth failed. Visit /api/auth/oauth-check and copy the exact values into Google Console. (1) OAuth consent: Publish the app or add your email as a test user. (2) Authorized redirect URIs and JavaScript origins must match exactly.`,
+    default: 'See SETUP_AUTH.md in the project for setup steps.',
+  }
+  return tips[error] || tips.default
 }
 
 export default function AuthError() {
   const router = useRouter()
   const error = (router.query.error as string) || 'unknown'
+  const [origin, setOrigin] = useState('')
+  useEffect(() => setOrigin(typeof window !== 'undefined' ? window.location.origin : ''), [])
 
   return (
     <>
@@ -26,8 +34,8 @@ export default function AuthError() {
           <h1 className="text-2xl font-normal text-gray-900 mb-4">
             Sign-in failed
           </h1>
-          <p className="text-gray-600 mb-6">
-            {ERROR_TIPS[error] || ERROR_TIPS.default}
+          <p className="text-gray-600 mb-6 text-left">
+            {getErrorTip(error, origin)}
           </p>
           <div className="space-y-3">
             <Link

@@ -5,6 +5,7 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     hasGoogleClientId: !!process.env.GOOGLE_CLIENT_ID,
     hasGoogleClientSecret: !!process.env.GOOGLE_CLIENT_SECRET,
     hasNextAuthUrl: !!process.env.NEXTAUTH_URL,
+    hasNextAuthSecret: !!process.env.NEXTAUTH_SECRET,
     nextAuthUrl: process.env.NEXTAUTH_URL || '(not set)',
   })
 }
