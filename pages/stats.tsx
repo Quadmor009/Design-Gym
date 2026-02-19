@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import Head from 'next/head'
 import Link from 'next/link'
+import { useSession } from 'next-auth/react'
 
 interface UserStats {
   totalSessions: number
@@ -18,18 +19,26 @@ interface UserStats {
 }
 
 export default function Stats() {
+  const { data: session, status } = useSession()
   const [stats, setStats] = useState<UserStats | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [userIdentifier, setUserIdentifier] = useState<string>('')
 
+  // Signed-in users go to profile (unified page)
   useEffect(() => {
-    // Get user identifier from URL params or sessionStorage
+    if (status === 'authenticated') {
+      window.location.href = '/profile'
+      return
+    }
+  }, [status])
+
+  useEffect(() => {
+    if (status === 'authenticated' || status === 'loading') return
+    // Quick Play users: get identifier from URL params or sessionStorage
     const params = new URLSearchParams(window.location.search)
     const name = params.get('name')
     const twitterHandle = params.get('twitter')
-    
-    // Or get from sessionStorage (last submitted entry)
     const lastEntryId = sessionStorage.getItem('lastLeaderboardEntryId')
     
     if (name) {
@@ -45,7 +54,7 @@ export default function Stats() {
       setError('No user identifier found. Please provide ?name=YourName or ?twitter=YourHandle')
       setLoading(false)
     }
-  }, [])
+  }, [status])
 
   const fetchLastEntryName = async (entryId: string) => {
     try {

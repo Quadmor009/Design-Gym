@@ -18,6 +18,7 @@ interface ProfileData {
     timestamp: number
     date: string
   }>
+  accuracyTrend: Array<{ session: number; accuracy: number; date: string }>
 }
 
 export default function Profile() {
@@ -53,10 +54,10 @@ export default function Profile() {
     return (
       <>
         <Head>
-          <title>Profile - Design Gym</title>
+          <title>Your Progress - Design Gym</title>
         </Head>
         <main className="min-h-screen bg-white flex items-center justify-center">
-          <p className="text-gray-500">Loading your profile...</p>
+          <p className="text-gray-500">Loading your progress...</p>
         </main>
       </>
     )
@@ -66,10 +67,10 @@ export default function Profile() {
     return (
       <>
         <Head>
-          <title>Profile - Design Gym</title>
+          <title>Your Progress - Design Gym</title>
         </Head>
         <main className="min-h-screen bg-white px-6 py-12 flex flex-col items-center justify-center">
-          <p className="text-gray-600 mb-6">{error || 'Could not load profile'}</p>
+          <p className="text-gray-600 mb-6">{error || 'Could not load progress'}</p>
           <Link
             href="/"
             className="px-6 py-3 bg-black text-white font-medium rounded-[8px] hover:bg-gray-800"
@@ -84,8 +85,8 @@ export default function Profile() {
   return (
     <>
       <Head>
-        <title>Profile - Design Gym</title>
-        <meta name="description" content="Your Design Gym profile and activity" />
+        <title>Your Progress - Design Gym</title>
+        <meta name="description" content="Your Design Gym progress and activity" />
       </Head>
       <main className="min-h-screen bg-white px-6 py-12 md:px-12 md:py-16">
         <div className="max-w-2xl mx-auto">
@@ -106,7 +107,7 @@ export default function Profile() {
               <h1 className="text-2xl font-normal text-black">
                 {profile.user.name || 'Designer'}
               </h1>
-              <p className="text-sm text-gray-500">Your activity and progress</p>
+              <p className="text-sm text-gray-500">Your progress and activity</p>
             </div>
           </div>
 
@@ -137,9 +138,35 @@ export default function Profile() {
             </div>
           </div>
 
+          {/* Accuracy trend */}
+          {(profile.accuracyTrend?.length ?? 0) > 0 && (
+            <div className="mb-10">
+              <h2 className="text-lg font-medium text-black mb-4">Accuracy trend</h2>
+              <div className="bg-white border border-gray-200 rounded-2xl p-6 mb-10">
+                <div className="space-y-3">
+                  {(profile.accuracyTrend ?? []).map((point, index) => (
+                    <div key={index} className="flex items-center gap-4">
+                      <div className="w-20 text-sm text-gray-600">Session {point.session}</div>
+                      <div className="flex-1 bg-gray-100 rounded-full h-6 relative overflow-hidden">
+                        <div
+                          className="h-full bg-black transition-all duration-500"
+                          style={{ width: `${point.accuracy}%` }}
+                        />
+                        <span className="absolute inset-0 flex items-center justify-center text-xs font-medium text-gray-900">
+                          {point.accuracy.toFixed(1)}%
+                        </span>
+                      </div>
+                      <div className="w-24 text-xs text-gray-500 text-right">{point.date}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Recent activity */}
           <div className="mb-10">
-            <h2 className="text-lg font-medium text-black mb-4">Recent activity</h2>
+            <h2 className="text-lg font-medium text-black mb-4">Recent sessions</h2>
             {profile.recentSessions.length === 0 ? (
               <p className="text-gray-500 text-sm py-8 text-center border border-dashed border-gray-200 rounded-[16px]">
                 No sessions yet. Complete a quiz to see your activity here.

@@ -38,7 +38,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         )
         sessions = sessionsResult.rows
       }
-      // Fallback: match by name if no user_id entries
+      // Fallback: match by name if no user_id entries (scores saved before user_id linking)
       if (sessions.length === 0 && userName) {
         const fallbackResult = await query(
           `SELECT id, score, accuracy, time_taken as "timeTaken", timestamp
@@ -86,6 +86,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       date: new Date(s.timestamp).toLocaleDateString(),
     }))
 
+    const accuracyTrend = sessions.slice(0, 10).reverse().map((s, i) => ({
+      session: i + 1,
+      accuracy: parseFloat(String(s.accuracy)),
+      date: new Date(s.timestamp).toLocaleDateString(),
+    }))
+
     res.status(200).json({
       user: {
         name: session.user.name,
@@ -98,6 +104,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       averageAccuracy: Math.round(averageAccuracy * 100) / 100,
       averageTime: Math.round(averageTime),
       recentSessions,
+      accuracyTrend,
     })
   } catch (error) {
     console.error('Profile API error:', error)
@@ -114,6 +121,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       averageAccuracy: 0,
       averageTime: 0,
       recentSessions: [],
+      accuracyTrend: [],
     })
   }
 }

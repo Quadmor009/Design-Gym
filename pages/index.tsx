@@ -110,7 +110,7 @@ export default function Home() {
               href="/profile"
               className="inline-block px-5 py-2.5 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-[8px] hover:bg-gray-50 transition-colors"
             >
-              Your activity
+              Your Progress
             </Link>
           ) : (
             <button

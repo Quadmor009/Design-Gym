@@ -370,9 +370,8 @@ export default function QuizContent() {
           
           const response = await fetch('/api/leaderboard', {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
             body: JSON.stringify(submissionData),
           })
           
@@ -438,6 +437,7 @@ export default function QuizContent() {
       const response = await fetch('/api/leaderboard', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           name: playerName.trim(),
           score: coins,
@@ -465,11 +465,15 @@ export default function QuizContent() {
   }
 
   const handleViewStats = () => {
-    // Navigate to stats page with user identifier
-    const identifier = twitterHandle.trim() 
-      ? `?twitter=${twitterHandle.replace('@', '')}`
-      : `?name=${encodeURIComponent(playerName.trim())}`
-    window.location.href = `/stats${identifier}`
+    // Signed-in users go to profile; Quick Play users go to stats by name/handle
+    if (session?.user) {
+      window.location.href = '/profile'
+    } else {
+      const identifier = twitterHandle.trim() 
+        ? `?twitter=${twitterHandle.replace('@', '')}`
+        : `?name=${encodeURIComponent(playerName.trim())}`
+      window.location.href = `/stats${identifier}`
+    }
   }
 
   const handleShareOnTwitter = () => {
@@ -510,17 +514,21 @@ ${siteUrl}`
   
   // Qualitative feedback based on accuracy
   const getFeedback = (accuracy: number): string => {
-    if (accuracy >= 80) return 'Strong'
-    if (accuracy >= 50) return 'Solid'
-    return 'Keep practicing'
+    if (accuracy >= 80) return 'Strong eye'
+    if (accuracy >= 50) return 'Solid progress'
+    return 'Every session counts'
   }
 
-  // Get color for accuracy display
-  // Orange for Solid (50-79), Green for Strong (>=80), Red for Needs practice (<50)
+  // Softer color scheme: green (strong), amber (solid), slate (building)
   const getAccuracyColor = (accuracy: number): string => {
-    if (accuracy >= 80) return 'text-green-600' // Strong - Green
-    if (accuracy >= 50) return 'text-orange-600' // Solid - Orange
-    return 'text-red-600' // Needs practice - Red
+    if (accuracy >= 80) return 'text-emerald-600'
+    if (accuracy >= 50) return 'text-amber-700'
+    return 'text-slate-600'
+  }
+  const getAccuracyBg = (accuracy: number): string => {
+    if (accuracy >= 80) return 'bg-emerald-50 border-emerald-200'
+    if (accuracy >= 50) return 'bg-amber-50 border-amber-200'
+    return 'bg-slate-50 border-slate-200'
   }
 
   // Determine if the selected answer is correct
@@ -911,36 +919,34 @@ ${siteUrl}`
                     className="w-16 h-16 object-contain"
                   />
                 </div>
-                <h2 className="text-xl sm:text-2xl font-normal mb-2 text-center">
+                <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-1.5 text-center">
                   Session Complete
                 </h2>
-                <p className="text-sm text-gray-500 text-center mb-6">
+                <p className="text-sm text-gray-600 text-center mb-6">
                   Nice work. Every session sharpens your eye.
                 </p>
 
-                {/* Results first - celebrate the achievement */}
-                <div className="mb-6">
-                  <div className="mb-4 flex items-center justify-center gap-3 border-2 border-amber-200 rounded-[12px] px-6 py-4 bg-gradient-to-br from-amber-50 to-yellow-50 w-fit mx-auto">
-                    <svg 
-                      className="w-7 h-7 coin-animate-loop coin-glow"
-                      viewBox="0 0 24 24" 
-                      fill="none" 
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <circle cx="12" cy="12" r="10" fill="#F59E0B" stroke="#D97706" strokeWidth="1.5"/>
-                      <circle cx="12" cy="12" r="6" fill="#FCD34D" opacity="0.6"/>
-                      <path d="M12 8C9.79 8 8 9.79 8 12C8 14.21 9.79 16 12 16C14.21 16 16 14.21 16 12C16 9.79 14.21 8 12 8Z" fill="#F59E0B" opacity="0.3"/>
-                    </svg>
-                    <div className="flex flex-col">
-                      <span className="text-xs font-medium text-amber-700 uppercase tracking-wide">Coins Earned</span>
-                      <span className="text-2xl font-bold text-amber-900">{coins}</span>
+                {/* Results - celebrate the achievement */}
+                <div className="mb-8">
+                  <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 mb-5">
+                    <div className="flex items-center gap-3 border-2 border-amber-200 rounded-2xl px-6 py-4 bg-gradient-to-br from-amber-50 to-yellow-50">
+                      <svg className="w-8 h-8 coin-animate-loop coin-glow flex-shrink-0" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="12" cy="12" r="10" fill="#F59E0B" stroke="#D97706" strokeWidth="1.5"/>
+                        <circle cx="12" cy="12" r="6" fill="#FCD34D" opacity="0.6"/>
+                        <path d="M12 8C9.79 8 8 9.79 8 12C8 14.21 9.79 16 12 16C14.21 16 16 14.21 16 12C16 9.79 14.21 8 12 8Z" fill="#F59E0B" opacity="0.3"/>
+                      </svg>
+                      <div>
+                        <span className="text-xs font-medium text-amber-700 uppercase tracking-wider block">Coins</span>
+                        <span className="text-2xl font-bold text-amber-900">{coins}</span>
+                      </div>
                     </div>
-                  </div>
-                  <div className={`text-2xl font-medium mb-2 text-center ${getAccuracyColor(accuracy)}`}>
-                    Accuracy: {accuracy}%
-                  </div>
-                  <div className="text-base text-gray-700 text-center">
-                    {getFeedback(accuracy)}
+                    <div className={`flex items-center gap-3 border-2 rounded-2xl px-6 py-4 ${getAccuracyBg(accuracy)}`}>
+                      <div className={`text-2xl font-bold ${getAccuracyColor(accuracy)}`}>{accuracy}%</div>
+                      <div>
+                        <span className="text-xs font-medium text-gray-500 uppercase tracking-wider block">Accuracy</span>
+                        <span className="text-sm font-medium text-gray-700">{getFeedback(accuracy)}</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -993,26 +999,26 @@ ${siteUrl}`
                   </p>
                 )}
                 
-                {/* Share Tone Toggle */}
-                <div className="mb-4">
-                  <div className="flex items-center justify-center gap-2 mb-3">
-                    <span className="text-xs text-gray-500 font-medium">Share tone:</span>
+                {/* Share tone - segmented control */}
+                <div className="mb-6">
+                  <p className="text-sm font-medium text-gray-600 mb-2 text-center">Share tone</p>
+                  <div className="inline-flex p-1 bg-gray-100 rounded-xl border border-gray-200 mx-auto">
                     <button
                       onClick={() => setShareTone('humble')}
-                      className={`px-3 py-1.5 text-xs font-medium rounded-[8px] transition-colors ${
+                      className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
                         shareTone === 'humble'
-                          ? 'bg-gray-900 text-white'
-                          : 'bg-gray-100 text-gray-400 hover:bg-gray-200'
+                          ? 'bg-white text-gray-900 shadow-sm border border-gray-200'
+                          : 'text-gray-500 hover:text-gray-700'
                       }`}
                     >
                       Humble
                     </button>
                     <button
                       onClick={() => setShareTone('brag')}
-                      className={`px-3 py-1.5 text-xs font-medium rounded-[8px] transition-colors ${
+                      className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
                         shareTone === 'brag'
-                          ? 'bg-gray-900 text-white'
-                          : 'bg-gray-100 text-gray-400 hover:bg-gray-200'
+                          ? 'bg-white text-gray-900 shadow-sm border border-gray-200'
+                          : 'text-gray-500 hover:text-gray-700'
                       }`}
                     >
                       Brag
@@ -1020,35 +1026,38 @@ ${siteUrl}`
                   </div>
                 </div>
                 
-                <div className="flex flex-col sm:flex-row gap-3 mb-3">
-                  {(!isQuickPlay || quickPlaySaved) && (
+                {/* Action buttons - clear hierarchy */}
+                <div className="flex flex-col gap-3 mb-4">
+                  <div className="flex flex-col sm:flex-row gap-3">
                     <button
-                      onClick={handleViewStats}
-                      className="flex-1 px-6 sm:px-8 py-3 bg-black text-white font-normal hover:bg-gray-800 transition-colors whitespace-nowrap rounded-[8px] text-sm sm:text-base"
+                      onClick={handleViewLeaderboard}
+                      className="flex-1 px-6 sm:px-8 py-3.5 bg-black text-white font-medium hover:bg-gray-800 transition-colors whitespace-nowrap rounded-xl text-sm sm:text-base"
                     >
-                      View Your Stats
+                      View Leaderboard
                     </button>
-                  )}
+                    {(!isQuickPlay || quickPlaySaved) && (
+                      <button
+                        onClick={handleViewStats}
+                        className="flex-1 px-6 sm:px-8 py-3.5 bg-gray-100 text-gray-900 font-medium hover:bg-gray-200 transition-colors whitespace-nowrap rounded-xl text-sm sm:text-base border border-gray-200"
+                      >
+                        View Your Stats
+                      </button>
+                    )}
+                  </div>
                   <button
-                    onClick={handleViewLeaderboard}
-                    className="flex-1 px-6 sm:px-8 py-3 bg-black text-white font-normal hover:bg-gray-800 transition-colors whitespace-nowrap rounded-[8px] text-sm sm:text-base"
+                    onClick={handleShareOnTwitter}
+                    className="w-full px-6 py-3 flex items-center justify-center gap-2 rounded-xl text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors border border-gray-200"
                   >
-                    View Leaderboard
+                    <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                    </svg>
+                    Share on X
                   </button>
                 </div>
-                <button
-                  onClick={handleShareOnTwitter}
-                  className="w-full mb-4 px-6 sm:px-8 py-3 bg-gray-100 text-gray-900 font-normal hover:bg-gray-200 transition-colors whitespace-nowrap flex items-center justify-center gap-2 rounded-[8px] text-sm sm:text-base border border-gray-200"
-                >
-                  <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-                  </svg>
-                  Share on X
-                </button>
-                <div className="text-center pt-4 border-t border-gray-200">
+                <div className="text-center pt-4 border-t border-gray-100">
                   <button
                     onClick={handleStartOver}
-                    className="text-base font-medium text-gray-900 hover:text-black transition-colors underline decoration-2 underline-offset-4 hover:decoration-gray-400"
+                    className="text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors"
                   >
                     Start Over
                   </button>
