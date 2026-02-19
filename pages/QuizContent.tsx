@@ -835,12 +835,12 @@ ${siteUrl}`
                   >
                     Quick Play
                   </button>
-                  <Link
+                  <a
                     href="/api/auth/signin/google?callbackUrl=/quiz"
-                    className="w-full sm:w-auto px-6 sm:px-8 py-3 bg-black text-white font-normal hover:bg-gray-800 transition-colors rounded-[8px] text-sm sm:text-base text-center block"
+                    className="w-full sm:w-auto px-6 sm:px-8 py-3 bg-black text-white font-normal hover:bg-gray-800 transition-colors rounded-[8px] text-sm sm:text-base text-center block cursor-pointer"
                   >
                     Sign up with Google
-                  </Link>
+                  </a>
                 </>
               )}
             </div>

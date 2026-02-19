@@ -98,8 +98,8 @@ export default function Home() {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
       <main className="h-screen overflow-hidden relative" style={{ backgroundColor: '#FAF9F7', overflowX: 'hidden', overflowY: 'hidden' }}>
-        {/* Sign up / user area - top right */}
-        <div className="absolute top-6 right-4 md:right-8 lg:right-12 xl:right-16 z-20 flex items-center gap-3">
+        {/* Sign up / user area - top right - z-50 ensures it's above fixed hero media */}
+        <div className="absolute top-6 right-4 md:right-8 lg:right-12 xl:right-16 z-50 flex items-center gap-3">
           {streak !== null && streak > 0 && (
             <span className="text-sm font-medium text-gray-600 bg-gray-100 px-3 py-1.5 rounded-[8px]">
               {streak} day streak
@@ -113,12 +113,12 @@ export default function Home() {
               Your activity
             </Link>
           ) : (
-            <Link
+            <a
               href="/api/auth/signin/google?callbackUrl=/quiz"
-              className="inline-block px-5 py-2.5 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-[8px] hover:bg-gray-50 transition-colors"
+              className="inline-block px-5 py-2.5 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-[8px] hover:bg-gray-50 transition-colors cursor-pointer"
             >
               Sign up
-            </Link>
+            </a>
           )}
         </div>
 
