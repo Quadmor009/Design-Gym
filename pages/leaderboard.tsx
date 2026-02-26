@@ -41,11 +41,10 @@ export default function Leaderboard() {
     try {
       const response = await fetch(`/api/leaderboard?level=global`)
       
-      if (!response.ok) {
-        throw new Error(`Failed to fetch leaderboard: ${response.status} ${response.statusText}`)
-      }
-      
       const data = await response.json()
+      if (!response.ok) {
+        throw new Error(data?.message || `Failed to fetch leaderboard: ${response.status}`)
+      }
       setEntries(data)
     } catch (error) {
       console.error('Error fetching leaderboard:', error)

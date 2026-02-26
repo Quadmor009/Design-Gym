@@ -145,15 +145,12 @@ export default async function handler(
     // Ensure we always send a response, even if there's an error
     if (!res.headersSent) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-      const errorDetails = process.env.NODE_ENV === 'production' 
-        ? 'Check Vercel function logs for details'
-        : errorMessage
+      const errorDetails = errorMessage
       
       res.status(500).json({ 
         error: 'Internal server error',
         message: errorDetails,
-        hint: 'If using Render Postgres, try the connection pooler URL in Dashboard. Ensure DATABASE_URL is set in Vercel env vars.',
-        ...(process.env.NODE_ENV !== 'production' && { details: errorMessage })
+        hint: 'If using Render Postgres, try the connection pooler URL in Dashboard. Ensure DATABASE_URL is set in Vercel env vars.'
       })
     }
   }
