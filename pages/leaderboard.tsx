@@ -84,6 +84,13 @@ export default function Leaderboard() {
 
       <main className="min-h-screen bg-white px-6 py-12 md:px-12 md:py-16">
         <div className="max-w-4xl mx-auto">
+          {/* Logo */}
+          <div className="mb-8 text-center">
+            <Link href="/">
+              <img src="/logo-brand.png" alt="Design Gym" className="h-8 md:h-10 w-auto mx-auto" />
+            </Link>
+          </div>
+
           {/* Header */}
           <div className="mb-12 text-center">
             <h1 className="text-4xl md:text-5xl font-normal text-black mb-4 tracking-tight">

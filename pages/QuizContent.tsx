@@ -635,9 +635,9 @@ ${siteUrl}`
         )}
         <div className="max-w-6xl mx-auto w-full px-0">
           <div className="mb-8 sm:mb-12 text-center">
-            <div className="text-lg sm:text-xl md:text-2xl font-medium text-black mb-3 sm:mb-4 tracking-normal" style={{ fontFamily: 'Inter, system-ui, -apple-system, sans-serif', letterSpacing: '0.02em' }}>
-              Design Gym
-            </div>
+            <Link href="/">
+              <img src="/logo-brand.png" alt="Design Gym" className="h-7 sm:h-8 md:h-9 w-auto mx-auto mb-3 sm:mb-4" />
+            </Link>
             <div className="mb-4">
               <div className="text-xs sm:text-sm text-gray-500 mb-2">
                 Question {currentQuestionIndex + 1} of {sessionQuestions.length}

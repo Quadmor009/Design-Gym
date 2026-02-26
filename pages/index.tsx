@@ -98,6 +98,13 @@ export default function Home() {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
       <main className="h-screen overflow-hidden relative" style={{ backgroundColor: '#FAF9F7', overflowX: 'hidden', overflowY: 'hidden' }}>
+        {/* Logo - top left */}
+        <div className="absolute top-6 left-4 md:left-8 lg:left-12 xl:left-16 z-50">
+          <Link href="/">
+            <img src="/logo-brand.png" alt="Design Gym" className="h-8 md:h-10 w-auto" />
+          </Link>
+        </div>
+
         {/* Sign up / user area - top right - z-50 ensures it's above fixed hero media */}
         <div className="absolute top-6 right-4 md:right-8 lg:right-12 xl:right-16 z-50 flex items-center gap-3">
           {streak !== null && streak > 0 && (
@@ -161,19 +168,18 @@ export default function Home() {
             <div className="flex-1 flex items-center min-h-0 relative">
               {/* Hero Content - Left Side - Aligned to left edge */}
               <div className="flex flex-col justify-center relative min-h-0 w-full lg:w-1/2 lg:max-w-[50%]">
-                {/* Eyebrow Text - Top Left - Inside left column for perfect alignment */}
-                <p className="text-xs md:text-sm font-medium text-gray-500 tracking-wide uppercase mb-6 md:mb-8">
-                  Trusted design practice, Worldwide
-                </p>
-                
-                {/* Main Headline */}
-                <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl 2xl:text-9xl font-bold text-black mb-4 md:mb-6 tracking-tight leading-[1.1]">
-                  Design Gym
-                </h1>
+                {/* Main Headline - wordmark logo */}
+                <div className="mb-1 md:mb-2">
+                  <img
+                    src="/wordmark.png"
+                    alt="Design Gym"
+                    className="h-12 sm:h-16 md:h-20 lg:h-24 xl:h-28 w-auto"
+                  />
+                </div>
 
                 {/* Supporting Paragraph */}
                 <p className="text-sm md:text-base text-gray-600 leading-relaxed mb-6 md:mb-8 max-w-xl">
-                  Experience a hassle-free, seamless practice with efficient, professional design training tailored to your needs.
+                  Sharpen your design eye with quick, side-by-side comparison rounds that train your attention to detail.
                 </p>
 
                 {/* CTA Row */}
@@ -249,10 +255,10 @@ export default function Home() {
           {/* Credit - Bottom Right with filled frame - Hidden on mobile */}
           <div className="hidden sm:block absolute bottom-0 right-4 md:right-8 lg:right-12 xl:right-16 pb-8 md:pb-12 lg:pb-16 z-30">
             <div className="bg-white/95 backdrop-blur-md px-4 py-2.5 rounded-[8px] border border-gray-300/50 shadow-md hover:shadow-lg transition-all duration-200">
-              <p className="text-xs text-gray-800 font-medium tracking-wide">
+              <a href="https://www.quadmor.design" target="_blank" rel="noopener noreferrer" className="text-xs text-gray-800 font-medium tracking-wide">
                 <span className="text-gray-500">Vibe coded by</span>{' '}
-                <span className="text-black font-semibold">Quadri Morin</span>
-              </p>
+                <span className="text-black font-semibold hover:underline">Quadri Morin</span>
+              </a>
             </div>
           </div>
         </section>

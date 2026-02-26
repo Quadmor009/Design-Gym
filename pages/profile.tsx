@@ -90,6 +90,13 @@ export default function Profile() {
       </Head>
       <main className="min-h-screen bg-white px-6 py-12 md:px-12 md:py-16">
         <div className="max-w-2xl mx-auto">
+          {/* Logo */}
+          <div className="mb-8">
+            <Link href="/">
+              <img src="/logo-brand.png" alt="Design Gym" className="h-8 md:h-10 w-auto" />
+            </Link>
+          </div>
+
           {/* Header with user info */}
           <div className="flex items-center gap-4 mb-10">
             <div className="w-16 h-16 rounded-full border-2 border-gray-200 bg-gray-100 overflow-hidden flex-shrink-0">
