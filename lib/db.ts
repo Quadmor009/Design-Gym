@@ -1,72 +1,73 @@
 import { Pool } from 'pg'
 
-// Database connection pool
 let pool: Pool | null = null
 
-export function getDbPool(): Pool {
-  if (pool) {
-    return pool
-  }
-
-  // Get database connection string from environment variable
+function createPool(): Pool {
   const connectionString = process.env.DATABASE_URL
 
   if (!connectionString) {
-    // Don't throw - return a helpful error message instead
-    // This prevents Next.js from crashing during module import
-    const error = new Error(
+    throw new Error(
       'DATABASE_URL environment variable is not set. ' +
-      'Please set it in your .env.local file (for local) or deployment platform environment variables (for production). ' +
-      'Make sure to restart your dev server after creating .env.local, or redeploy after adding the environment variable.'
+      'Please set it in your .env.local file (for local) or deployment platform environment variables (for production).'
     )
-    console.error(error.message)
-    console.error('Current NODE_ENV:', process.env.NODE_ENV)
-    throw error
   }
 
-  try {
-    // Create connection pool
-    // Render PostgreSQL requires SSL connections
-    pool = new Pool({
-      connectionString,
-      ssl: { rejectUnauthorized: false },
-      connectionTimeoutMillis: 10000,
-      idleTimeoutMillis: 10000,
-      // Serverless: 1 connection per instance to avoid exhausting Render limits
-      max: process.env.VERCEL ? 1 : 10,
-    })
+  const newPool = new Pool({
+    connectionString,
+    ssl: { rejectUnauthorized: false },
+    connectionTimeoutMillis: 10000,
+    idleTimeoutMillis: 5000,
+    max: process.env.VERCEL ? 1 : 10,
+  })
 
-    // Handle pool errors
-    pool.on('error', (err) => {
-      console.error('Unexpected database pool error:', err)
-      pool = null // Reset pool on error so it can be recreated
-    })
+  newPool.on('error', (err) => {
+    console.error('Pool error — will recreate on next query:', err.message)
+    pool = null
+  })
 
-    return pool
-  } catch (error) {
-    console.error('Failed to create database pool:', error)
-    pool = null // Reset pool on error
-    throw error
-  }
+  return newPool
 }
 
-// Helper function to execute queries
+function getDbPool(): Pool {
+  if (!pool) {
+    pool = createPool()
+  }
+  return pool
+}
+
 export async function query(text: string, params?: any[]) {
-  try {
-    const db = getDbPool()
-    const result = await db.query(text, params)
-    return result
-  } catch (error) {
-    console.error('Database query error:', error)
-    // Re-throw with more context
-    if (error instanceof Error) {
-      throw new Error(`Database query failed: ${error.message}`)
+  const MAX_RETRIES = 2
+
+  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      const db = getDbPool()
+      const result = await db.query(text, params)
+      return result
+    } catch (error: any) {
+      const isConnectionError =
+        error?.message?.includes('Connection terminated') ||
+        error?.message?.includes('connection timeout') ||
+        error?.message?.includes('ECONNRESET') ||
+        error?.message?.includes('ECONNREFUSED') ||
+        error?.code === 'EPIPE' ||
+        error?.code === '57P01'
+
+      if (isConnectionError && attempt < MAX_RETRIES) {
+        console.warn(`DB connection error (attempt ${attempt + 1}/${MAX_RETRIES + 1}), retrying...`)
+        pool = null
+        continue
+      }
+
+      if (error instanceof Error) {
+        throw new Error(`Database query failed: ${error.message}`)
+      }
+      throw error
     }
-    throw error
   }
+
+  throw new Error('Database query failed after retries')
 }
 
-// Test database connection (for debugging)
 export async function testConnection(): Promise<boolean> {
   try {
     await query('SELECT 1')
@@ -76,4 +77,3 @@ export async function testConnection(): Promise<boolean> {
     return false
   }
 }
-
