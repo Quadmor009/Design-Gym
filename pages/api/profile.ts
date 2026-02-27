@@ -26,29 +26,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     let sessions: Array<{ id: string; score: number; accuracy: number; timeTaken: number; timestamp: number }> = []
     let currentStreak = 0
 
-    // Fetch leaderboard entries (by user_id if available, else by name as fallback)
+    // Fetch leaderboard entries by name (user_id column not available in production)
     try {
-      if (userId) {
+      if (userName) {
         const sessionsResult = await query(
-          `SELECT id, score, accuracy, time_taken as "timeTaken", timestamp
-           FROM leaderboard
-           WHERE user_id = $1
-           ORDER BY timestamp DESC`,
-          [userId]
-        )
-        sessions = sessionsResult.rows
-      }
-      // Fallback: match by name if no user_id entries (scores saved before user_id linking)
-      if (sessions.length === 0 && userName) {
-        const fallbackResult = await query(
           `SELECT id, score, accuracy, time_taken as "timeTaken", timestamp
            FROM leaderboard
            WHERE LOWER(TRIM(name)) = LOWER(TRIM($1))
            ORDER BY timestamp DESC
-           LIMIT 20`,
+           LIMIT 50`,
           [userName]
         )
-        sessions = fallbackResult.rows
+        sessions = sessionsResult.rows
       }
     } catch (dbErr) {
       console.error('Profile API - sessions query:', dbErr)
