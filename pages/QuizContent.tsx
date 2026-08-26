@@ -1,9 +1,10 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef, type PointerEvent as ReactPointerEvent, type KeyboardEvent as ReactKeyboardEvent } from 'react'
 import { createPortal } from 'react-dom'
 import Head from 'next/head'
 import Link from 'next/link'
 import { useSession, signIn } from 'next-auth/react'
 import { questions, foxQuote, Question } from '../data/quizData'
+import { promptGuessQuestions } from '../data/promptGuessData'
 
 const HOW_IT_WORKS_STEPS = [
   { title: 'Choose', body: 'Pick the better design.' },
@@ -11,16 +12,22 @@ const HOW_IT_WORKS_STEPS = [
   { title: 'Earn', body: 'Correct answers earn 100 coins.' },
 ] as const
 
+const PROMPT_HOW_IT_WORKS_STEPS = [
+  { title: 'Choose', body: 'Pick which prompt made the image.' },
+  { title: 'Compare', body: 'See why the other prompt falls short.' },
+  { title: 'Earn', body: 'Correct answers earn 100 coins.' },
+] as const
+
 // Configuration for questions per level - never show all questions
 const QUESTIONS_PER_LEVEL: Record<'beginner' | 'mid' | 'expert', number> = {
-  beginner: 5, // Show 5 out of 20 beginner questions
+  beginner: 5, // Show 5 out of the playable beginner questions
   mid: 7, // Show 7 out of 20 mid questions
   expert: 8, // Show 8 out of 20 expert questions
 }
 
 // Required pool composition - validate that pools meet these requirements
 const REQUIRED_POOL_COMPOSITION: Record<'beginner' | 'mid' | 'expert', { image: number; typeface: number }> = {
-  beginner: { image: 15, typeface: 5 },
+  beginner: { image: 30, typeface: 5 },
   mid: { image: 12, typeface: 8 },
   expert: { image: 13, typeface: 7 }
 }
@@ -67,9 +74,34 @@ function validatePoolComposition(
   }
 }
 
+function getTrainingCategory(): 'visual' | 'prompt' {
+  if (typeof window === 'undefined') return 'visual'
+  return new URLSearchParams(window.location.search).get('category') === 'prompt'
+    ? 'prompt'
+    : 'visual'
+}
+
+function toPromptQuestions(): Question[] {
+  return promptGuessQuestions.map((q) => ({
+    id: q.id,
+    difficulty: 'beginner',
+    type: 'prompt',
+    prompt: 'Which prompt generated this image?',
+    optionA: q.optionA,
+    optionB: q.optionB,
+    correctOption: 'A',
+    explanation: q.explanation,
+    image: q.image,
+  }))
+}
+
 // Select and randomize questions from all levels
 // STRICT RULES: Filter by explicit difficulty field only - never infer from filenames, IDs, or indexes
-function getRandomizedQuestions(): Question[] {
+function getRandomizedQuestions(category: 'visual' | 'prompt'): Question[] {
+  if (category === 'prompt') {
+    return shuffleArray(toPromptQuestions())
+  }
+
   // First, validate all questions have explicit difficulty
   validateQuestions(questions)
   
@@ -86,7 +118,7 @@ function getRandomizedQuestions(): Question[] {
           `Every question must explicitly define difficulty: "beginner" | "mid" | "expert"`
         )
       }
-      return q.difficulty === level
+      return q.difficulty === level && q.ready !== false && q.type !== 'prompt'
     })
     
     // STEP 2: Split by type within this difficulty pool
@@ -145,7 +177,8 @@ function shuffleOptions(optionA: string, optionB: string, correctOption: "A") {
 export default function QuizContent() {
   // Initialize randomized questions only once using function initializer
   // This prevents reshuffling on re-render
-  const [sessionQuestions] = useState<Question[]>(() => getRandomizedQuestions())
+  const [trainingCategory] = useState<'visual' | 'prompt'>(() => getTrainingCategory())
+  const [sessionQuestions] = useState<Question[]>(() => getRandomizedQuestions(trainingCategory))
   
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [selectedAnswer, setSelectedAnswer] = useState<'left' | 'right' | null>(null)
@@ -158,6 +191,10 @@ export default function QuizContent() {
   const [quickPlaySaved, setQuickPlaySaved] = useState(false)
   const [quickPlaySignUpDismissed, setQuickPlaySignUpDismissed] = useState(false)
   const [showLeaveConfirmModal, setShowLeaveConfirmModal] = useState(false)
+  const [isComparing, setIsComparing] = useState(false)
+  const [imageFailed, setImageFailed] = useState(false)
+  const pointerCompareRef = useRef(false)
+  const shiftCompareRef = useRef(false)
   
   // Coin state - track coins silently during session
   const [coins, setCoins] = useState(0)
@@ -176,6 +213,7 @@ export default function QuizContent() {
   // Share tone toggle
   const [shareTone, setShareTone] = useState<'brag' | 'humble'>('brag')
   const { data: session, status } = useSession()
+  const howItWorksSteps = trainingCategory === 'prompt' ? PROMPT_HOW_IT_WORKS_STEPS : HOW_IT_WORKS_STEPS
 
   // Enable scrolling on quiz page
   useEffect(() => {
@@ -201,6 +239,72 @@ export default function QuizContent() {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }, [currentQuestionIndex])
 
+  // Press-and-hold Compare, or hold Shift, to overlay the two options
+  useEffect(() => {
+    const isTypingTarget = (el: EventTarget | null) => {
+      if (!(el instanceof HTMLElement)) return false
+      const tag = el.tagName
+      return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || el.isContentEditable
+    }
+
+    const syncComparing = () => {
+      setIsComparing(pointerCompareRef.current || shiftCompareRef.current)
+    }
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== 'Shift' || e.repeat) return
+      if (!showExplanation) return
+      if (showInstructionModal || showLevelCompleteModal || showLeaveConfirmModal) return
+      if (isTypingTarget(e.target)) return
+      shiftCompareRef.current = true
+      syncComparing()
+    }
+
+    const onKeyUp = (e: KeyboardEvent) => {
+      if (e.key !== 'Shift') return
+      shiftCompareRef.current = false
+      syncComparing()
+    }
+
+    const releasePointerCompare = () => {
+      if (!pointerCompareRef.current) return
+      pointerCompareRef.current = false
+      syncComparing()
+    }
+
+    const onWindowBlur = () => {
+      pointerCompareRef.current = false
+      shiftCompareRef.current = false
+      setIsComparing(false)
+    }
+
+    window.addEventListener('keydown', onKeyDown)
+    window.addEventListener('keyup', onKeyUp)
+    window.addEventListener('pointerup', releasePointerCompare)
+    window.addEventListener('pointercancel', releasePointerCompare)
+    window.addEventListener('blur', onWindowBlur)
+    return () => {
+      window.removeEventListener('keydown', onKeyDown)
+      window.removeEventListener('keyup', onKeyUp)
+      window.removeEventListener('pointerup', releasePointerCompare)
+      window.removeEventListener('pointercancel', releasePointerCompare)
+      window.removeEventListener('blur', onWindowBlur)
+    }
+  }, [showExplanation, showInstructionModal, showLevelCompleteModal, showLeaveConfirmModal])
+
+  useEffect(() => {
+    if (
+      !showExplanation ||
+      showInstructionModal ||
+      showLevelCompleteModal ||
+      showLeaveConfirmModal
+    ) {
+      pointerCompareRef.current = false
+      shiftCompareRef.current = false
+      setIsComparing(false)
+    }
+  }, [showExplanation, showInstructionModal, showLevelCompleteModal, showLeaveConfirmModal, currentQuestionIndex])
+
   const currentQuestion = sessionQuestions[currentQuestionIndex]
   
   // Shuffle options at render time for each question
@@ -213,6 +317,10 @@ export default function QuizContent() {
       currentQuestion.correctOption
     )
   }, [currentQuestion])
+
+  useEffect(() => {
+    setImageFailed(false)
+  }, [currentQuestion?.id])
 
   // Check if we're at the last question
   const isLastQuestion = currentQuestionIndex === sessionQuestions.length - 1
@@ -253,9 +361,13 @@ export default function QuizContent() {
   }
 
   const handleNext = () => {
-    // Check if we just completed question 5 (beginner level complete)
-    // After answering question 5 (index 4), clicking Next should show modal
-    if (currentQuestionIndex === 4) {
+    setIsComparing(false)
+    pointerCompareRef.current = false
+    shiftCompareRef.current = false
+
+    // Visual sessions: 5 beginner, 7 mid, 8 expert. Prompt sessions are 5 questions
+    // and must not show beginner/mid interstitials after index 4.
+    if (trainingCategory === 'visual' && currentQuestionIndex === 4) {
       setCompletedLevel('beginner')
       setShowLevelCompleteModal(true)
       return
@@ -263,7 +375,7 @@ export default function QuizContent() {
     
     // Check if we just completed question 12 (mid level complete)
     // After answering question 12 (index 11), clicking Next should show modal
-    if (currentQuestionIndex === 11) {
+    if (trainingCategory === 'visual' && currentQuestionIndex === 11) {
       setCompletedLevel('mid')
       setShowLevelCompleteModal(true)
       return
@@ -281,6 +393,9 @@ export default function QuizContent() {
     setCurrentQuestionIndex(currentQuestionIndex + 1)
     setSelectedAnswer(null)
     setShowExplanation(false)
+    setIsComparing(false)
+    pointerCompareRef.current = false
+    shiftCompareRef.current = false
   }
 
   // Calculate max coins and accuracy
@@ -303,6 +418,9 @@ export default function QuizContent() {
     }
     setSelectedAnswer(null)
     setShowExplanation(false)
+    setIsComparing(false)
+    pointerCompareRef.current = false
+    shiftCompareRef.current = false
   }
 
   const handleStartOver = () => {
@@ -313,6 +431,9 @@ export default function QuizContent() {
     setAnsweredQuestions(new Set())
     setSelectedAnswer(null)
     setShowExplanation(false)
+    setIsComparing(false)
+    pointerCompareRef.current = false
+    shiftCompareRef.current = false
   }
 
   const handleStartTraining = () => {
@@ -325,6 +446,36 @@ export default function QuizContent() {
     setIsQuickPlay(true)
     setShowInstructionModal(false)
     setStartTime(Date.now())
+  }
+
+  const beginPointerCompare = (e: ReactPointerEvent<HTMLButtonElement>) => {
+    if (e.pointerType === 'mouse' && e.button !== 0) return
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId)
+    } catch {
+      // Capture is best-effort; window pointerup is the fallback
+    }
+    pointerCompareRef.current = true
+    setIsComparing(true)
+  }
+
+  const endPointerCompare = () => {
+    pointerCompareRef.current = false
+    setIsComparing(shiftCompareRef.current)
+  }
+
+  const beginKeyHoldCompare = (e: ReactKeyboardEvent<HTMLButtonElement>) => {
+    if (e.key !== ' ' && e.key !== 'Enter') return
+    if (e.repeat) return
+    e.preventDefault()
+    pointerCompareRef.current = true
+    setIsComparing(true)
+  }
+
+  const endKeyHoldCompare = (e: ReactKeyboardEvent<HTMLButtonElement>) => {
+    if (e.key !== ' ' && e.key !== 'Enter') return
+    pointerCompareRef.current = false
+    setIsComparing(shiftCompareRef.current)
   }
 
   // Set endTime for quick play when completion modal shows
@@ -564,7 +715,7 @@ ${siteUrl}`
   const rightIsCorrect = shuffledOptions.correctAnswer === 'right'
 
   const imageChoiceOutline = (side: 'left' | 'right') => {
-    if (currentQuestion.type === 'typeface') return null
+    if (currentQuestion.type === 'typeface' || currentQuestion.type === 'prompt') return null
     const selected = selectedAnswer === side
     const thisIsCorrect = side === 'left' ? leftIsCorrect : rightIsCorrect
     if (selected) return isCorrect ? 'border-green-500' : 'border-red-500'
@@ -572,15 +723,23 @@ ${siteUrl}`
     return null
   }
 
+  const promptChoiceOutline = (side: 'left' | 'right') => {
+    const selected = selectedAnswer === side
+    const thisIsCorrect = side === 'left' ? leftIsCorrect : rightIsCorrect
+    if (selected) return isCorrect ? 'border-green-500' : 'border-red-500'
+    if (showExplanation && thisIsCorrect) return 'border-green-500'
+    return 'border-gray-200'
+  }
+
   return (
     <>
       <Head>
-        <title>Design Gym - Training</title>
-        <meta name="description" content="Practice your visual judgment" />
+        <title>{trainingCategory === 'prompt' ? 'Design Gym - Prompt Training' : 'Design Gym - Training'}</title>
+        <meta name="description" content={trainingCategory === 'prompt' ? 'Guess which prompt generated the image' : 'Practice your visual judgment'} />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
 
-      <main className="min-h-screen bg-white px-3 sm:px-6 py-6 sm:py-12 md:px-12 md:py-16 w-full overflow-x-hidden">
+      <main className="min-h-screen bg-white px-3 sm:px-6 py-6 sm:py-12 md:px-12 md:py-16 w-full">
         {/* Fixed profile + coin counter at top-right */}
         <div className="fixed top-2 right-2 sm:top-8 sm:right-8 md:top-12 md:right-12 z-10 flex items-center gap-2">
           <button
@@ -649,7 +808,7 @@ ${siteUrl}`
           </div>,
           document.body
         )}
-        <div className="max-w-6xl mx-auto w-full px-0">
+        <div className="max-w-6xl mx-auto w-full min-w-0">
           <div className="mb-8 sm:mb-12 text-center">
             <Link href="/">
               <img src="/logo-brand.png" alt="Design Gym" className="h-7 sm:h-8 md:h-9 w-auto mx-auto mb-3 sm:mb-4" />
@@ -668,92 +827,182 @@ ${siteUrl}`
           </div>
 
           <div className="mb-8 sm:mb-12">
-            <h2 className="text-lg sm:text-xl md:text-2xl font-normal text-center mb-6 sm:mb-8 px-2 text-gray-900">
-              {currentQuestion.type === 'image' 
-                ? currentQuestion.prompt 
-                : currentQuestion.prompt}
+            <h2 className="text-lg sm:text-xl md:text-2xl font-normal text-center mb-6 sm:mb-8 px-2 text-gray-900 break-words">
+              {currentQuestion.prompt}
             </h2>
           </div>
 
-          <div
-            className={
-              currentQuestion.type === 'image'
-                ? 'grid grid-cols-1 md:grid-cols-2 gap-0 mb-8 sm:mb-12 w-full overflow-hidden rounded-3xl border border-gray-200 bg-[#F7F2EA]'
-                : 'grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-6 mb-8 sm:mb-12 w-full'
-            }
-          >
-            <div
-              onClick={() => handleSelect('left')}
-              className="cursor-pointer transition-all relative group"
-            >
-              {currentQuestion.type === 'typeface' ? (
-                <div
-                  className={`p-6 sm:p-8 min-h-[250px] sm:min-h-[300px] flex items-center justify-center bg-white transition-transform ${!showExplanation ? 'group-hover:scale-[1.02]' : ''
-                    }`}
-                  style={{ fontFamily: shuffledOptions.leftOption }}
-                >
-                  <p className="text-2xl sm:text-3xl leading-relaxed text-center px-2">
-                    {foxQuote}
-                  </p>
-                </div>
-              ) : (
-                <img
-                  src={shuffledOptions.leftOption}
-                  alt="Design option"
-                  className={`w-full h-auto object-contain transition-transform ${!showExplanation ? 'group-hover:scale-[1.02]' : ''
-                    }`}
-                  style={{ maxHeight: '400px' }}
-                />
-              )}
-              {imageChoiceOutline('left') && (
-                <div
-                  className={`absolute inset-0 z-20 pointer-events-none border-2 rounded-t-3xl md:rounded-tr-none md:rounded-l-3xl ${imageChoiceOutline('left')}`}
-                />
-              )}
-              {selectedAnswer === 'left' && (
-                <div className={`p-4 text-center font-medium ${isCorrect ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'
-                  }`}>
-                  {isCorrect ? '✓ Correct +100 coins' : '✗ Your choice'}
-                </div>
-              )}
-            </div>
+          {currentQuestion.type === 'prompt' ? (
+            <>
+              <div className="mb-8 sm:mb-10 overflow-hidden rounded-3xl border border-gray-200 bg-[#F7F2EA]">
+                {imageFailed || !currentQuestion.image ? (
+                  <div className="min-h-[240px] sm:min-h-[320px] flex flex-col items-center justify-center px-6 py-12 text-center">
+                    <p className="text-sm text-gray-600 mb-1">Image coming soon</p>
+                    {currentQuestion.image && (
+                      <p className="text-xs text-gray-400 break-all">{currentQuestion.image}</p>
+                    )}
+                  </div>
+                ) : (
+                  <img
+                    src={encodeURI(currentQuestion.image)}
+                    alt="Generated image to match with a prompt"
+                    className="w-full max-w-full h-auto object-contain"
+                    onError={() => setImageFailed(true)}
+                  />
+                )}
+              </div>
 
+              <div className="grid grid-cols-1 gap-3 sm:gap-4 mb-8 max-w-3xl mx-auto">
+                {(['left', 'right'] as const).map((side) => {
+                  const text = side === 'left' ? shuffledOptions.leftOption : shuffledOptions.rightOption
+                  return (
+                    <button
+                      key={side}
+                      type="button"
+                      onClick={() => handleSelect(side)}
+                      disabled={showExplanation}
+                      className={`text-left w-full rounded-2xl border-2 bg-white px-5 py-4 sm:px-6 sm:py-5 transition-colors ${promptChoiceOutline(side)} ${
+                        showExplanation ? 'cursor-default' : 'cursor-pointer hover:border-gray-400'
+                      }`}
+                    >
+                      <p className="text-sm sm:text-base text-gray-900 leading-relaxed">
+                        {text}
+                      </p>
+                      {selectedAnswer === side && (
+                        <p className={`mt-3 text-sm font-medium ${isCorrect ? 'text-green-800' : 'text-red-800'}`}>
+                          {isCorrect ? '✓ Correct +100 coins' : '✗ Your choice'}
+                        </p>
+                      )}
+                    </button>
+                  )
+                })}
+              </div>
+            </>
+          ) : showExplanation && isComparing ? (
             <div
-              onClick={() => handleSelect('right')}
-              className={`cursor-pointer transition-all relative group ${currentQuestion.type === 'typeface' ? '' : 'md:border-l md:border-gray-200'}`}
+              className={
+                currentQuestion.type === 'image'
+                  ? 'relative mb-8 sm:mb-12 w-full min-w-0 max-w-full overflow-hidden rounded-3xl border border-gray-200 bg-[#F7F2EA] select-none'
+                  : 'relative mb-8 sm:mb-12 w-full min-w-0 overflow-hidden rounded-3xl border border-gray-200 bg-white select-none'
+              }
             >
-              {currentQuestion.type === 'typeface' ? (
-                <div
-                  className={`p-6 sm:p-8 min-h-[250px] sm:min-h-[300px] flex items-center justify-center bg-white transition-transform ${!showExplanation ? 'group-hover:scale-[1.02]' : ''
-                    }`}
-                  style={{ fontFamily: shuffledOptions.rightOption }}
-                >
-                  <p className="text-2xl sm:text-3xl leading-relaxed text-center px-2">
-                    {foxQuote}
-                  </p>
-                </div>
+              {currentQuestion.type === 'image' ? (
+                <>
+                  <img
+                    src={encodeURI(shuffledOptions.leftOption)}
+                    alt=""
+                    draggable={false}
+                    className="quiz-option-image w-full max-w-full h-auto object-contain pointer-events-none"
+                  />
+                  <img
+                    src={encodeURI(shuffledOptions.rightOption)}
+                    alt=""
+                    draggable={false}
+                    className="quiz-compare-flicker absolute inset-0 w-full h-full object-contain pointer-events-none"
+                  />
+                </>
               ) : (
-                <img
-                  src={shuffledOptions.rightOption}
-                  alt="Design option"
-                  className={`w-full h-auto object-contain transition-transform ${!showExplanation ? 'group-hover:scale-[1.02]' : ''
-                    }`}
-                  style={{ maxHeight: '400px', maxWidth: '100%' }}
-                />
-              )}
-              {imageChoiceOutline('right') && (
-                <div
-                  className={`absolute inset-0 z-20 pointer-events-none border-2 rounded-b-3xl md:rounded-bl-none md:rounded-r-3xl ${imageChoiceOutline('right')}`}
-                />
-              )}
-              {selectedAnswer === 'right' && (
-                <div className={`p-4 text-center font-medium ${isCorrect ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'
-                  }`}>
-                  {isCorrect ? '✓ Correct +100 coins' : '✗ Your choice'}
-                </div>
+                <>
+                  <div
+                    className="p-6 sm:p-8 min-h-[250px] sm:min-h-[300px] flex items-center justify-center bg-white"
+                    style={{ fontFamily: shuffledOptions.leftOption }}
+                  >
+                    <p className="text-2xl sm:text-3xl leading-relaxed text-center px-2">
+                      {foxQuote}
+                    </p>
+                  </div>
+                  <div
+                    className="quiz-compare-flicker absolute inset-0 p-6 sm:p-8 min-h-[250px] sm:min-h-[300px] flex items-center justify-center bg-white"
+                    style={{ fontFamily: shuffledOptions.rightOption }}
+                  >
+                    <p className="text-2xl sm:text-3xl leading-relaxed text-center px-2">
+                      {foxQuote}
+                    </p>
+                  </div>
+                </>
               )}
             </div>
-          </div>
+          ) : (
+            <div
+              className={
+                currentQuestion.type === 'image'
+                  ? 'grid grid-cols-1 md:grid-cols-2 gap-0 mb-8 sm:mb-12 w-full min-w-0 max-w-full overflow-hidden rounded-3xl border border-gray-200 bg-[#F7F2EA]'
+                  : 'grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-6 mb-8 sm:mb-12 w-full min-w-0'
+              }
+            >
+              <div
+                onClick={() => handleSelect('left')}
+                className="cursor-pointer transition-all relative group min-w-0 overflow-hidden"
+              >
+                {currentQuestion.type === 'typeface' ? (
+                  <div
+                    className={`p-6 sm:p-8 min-h-[250px] sm:min-h-[300px] flex items-center justify-center bg-white transition-transform ${!showExplanation ? 'group-hover:scale-[1.02]' : ''
+                      }`}
+                    style={{ fontFamily: shuffledOptions.leftOption }}
+                  >
+                    <p className="text-2xl sm:text-3xl leading-relaxed text-center px-2">
+                      {foxQuote}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="overflow-hidden w-full min-w-0 max-w-full">
+                    <img
+                      src={encodeURI(shuffledOptions.leftOption)}
+                      alt="Design option"
+                      className={`quiz-option-image w-full max-w-full h-auto object-contain ${!showExplanation ? 'md:group-hover:scale-[1.02]' : ''}`}
+                    />
+                  </div>
+                )}
+                {imageChoiceOutline('left') && (
+                  <div
+                    className={`absolute inset-0 z-20 pointer-events-none border-2 rounded-t-3xl md:rounded-tr-none md:rounded-l-3xl ${imageChoiceOutline('left')}`}
+                  />
+                )}
+                {selectedAnswer === 'left' && (
+                  <div className={`p-4 text-center font-medium ${isCorrect ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'
+                    }`}>
+                    {isCorrect ? '✓ Correct +100 coins' : '✗ Your choice'}
+                  </div>
+                )}
+              </div>
+
+              <div
+                onClick={() => handleSelect('right')}
+                className={`cursor-pointer transition-all relative group min-w-0 overflow-hidden ${currentQuestion.type === 'typeface' ? '' : 'md:border-l md:border-gray-200'}`}
+              >
+                {currentQuestion.type === 'typeface' ? (
+                  <div
+                    className={`p-6 sm:p-8 min-h-[250px] sm:min-h-[300px] flex items-center justify-center bg-white transition-transform ${!showExplanation ? 'group-hover:scale-[1.02]' : ''
+                      }`}
+                    style={{ fontFamily: shuffledOptions.rightOption }}
+                  >
+                    <p className="text-2xl sm:text-3xl leading-relaxed text-center px-2">
+                      {foxQuote}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="overflow-hidden w-full min-w-0 max-w-full">
+                    <img
+                      src={encodeURI(shuffledOptions.rightOption)}
+                      alt="Design option"
+                      className={`quiz-option-image w-full max-w-full h-auto object-contain ${!showExplanation ? 'md:group-hover:scale-[1.02]' : ''}`}
+                    />
+                  </div>
+                )}
+                {imageChoiceOutline('right') && (
+                  <div
+                    className={`absolute inset-0 z-20 pointer-events-none border-2 rounded-b-3xl md:rounded-bl-none md:rounded-r-3xl ${imageChoiceOutline('right')}`}
+                  />
+                )}
+                {selectedAnswer === 'right' && (
+                  <div className={`p-4 text-center font-medium ${isCorrect ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'
+                    }`}>
+                    {isCorrect ? '✓ Correct +100 coins' : '✗ Your choice'}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           {showExplanation && (
             <div className="mb-8 px-5 py-3 bg-green-50 border-l-4 border-green-500">
@@ -763,15 +1012,43 @@ ${siteUrl}`
             </div>
           )}
 
-          {showExplanation && !isLastQuestion && (
-            <div className="text-center">
-              <button
-                onClick={handleNext}
-                className="hero-btn hero-btn-primary"
-              >
-                Next Question
-              </button>
+          {showExplanation && (currentQuestion.type !== 'prompt' || !isLastQuestion) && (
+            <div className="quiz-actions flex flex-wrap items-center justify-center gap-3">
+              {currentQuestion.type !== 'prompt' && (
+                <button
+                  type="button"
+                  className="hero-btn hero-btn-secondary quiz-compare-btn"
+                  aria-pressed={isComparing}
+                  aria-label="Compare designs. Hold the button or press Shift to overlay."
+                  title="Hold or press Shift"
+                  onPointerDown={beginPointerCompare}
+                  onPointerUp={endPointerCompare}
+                  onPointerCancel={endPointerCompare}
+                  onLostPointerCapture={endPointerCompare}
+                  onKeyDown={beginKeyHoldCompare}
+                  onKeyUp={endKeyHoldCompare}
+                  onContextMenu={(e) => e.preventDefault()}
+                >
+                  Compare
+                </button>
+              )}
+              {!isLastQuestion && (
+                <button
+                  type="button"
+                  onClick={handleNext}
+                  className="hero-btn hero-btn-primary"
+                >
+                  Next Question
+                </button>
+              )}
             </div>
+          )}
+          {showExplanation && (
+            <p className="sr-only" aria-live="polite">
+              {isComparing
+                ? 'Showing overlay comparison. Release to return to side by side.'
+                : ''}
+            </p>
           )}
         </div>
       </main>
@@ -781,17 +1058,19 @@ ${siteUrl}`
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white px-6 py-8 sm:px-10 sm:py-10 max-w-xl w-full rounded-[2rem] shadow-2xl max-h-[90vh] overflow-y-auto">
             <h2 className="text-2xl font-medium tracking-tight mb-2 text-center text-gray-900">
-              How Design Gym Works
+              {trainingCategory === 'prompt' ? 'How Prompt Training Works' : 'How Design Gym Works'}
             </h2>
             <p className="text-sm text-gray-500 text-center mb-5 leading-relaxed">
-              Sharpen your visual judgment. No sign-up required to try.
+              {trainingCategory === 'prompt'
+                ? 'One image. Two prompts. Pick the one that was used to generate it.'
+                : 'Sharpen your visual judgment. No sign-up required to try.'}
             </p>
 
             <div className="flex items-center gap-1 sm:gap-2 mb-6">
               <button
                 type="button"
                 aria-label="Previous step"
-                onClick={() => setInstructionStep((step) => (step + HOW_IT_WORKS_STEPS.length - 1) % HOW_IT_WORKS_STEPS.length)}
+                onClick={() => setInstructionStep((step) => (step + howItWorksSteps.length - 1) % howItWorksSteps.length)}
                 className="flex-shrink-0 w-9 h-9 sm:w-10 sm:h-10 rounded-full border border-gray-200 text-gray-700 hover:bg-gray-50 flex items-center justify-center"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -814,13 +1093,13 @@ ${siteUrl}`
                   </svg>
                 </div>
                 <h3 className="text-sm sm:text-base font-medium text-gray-900 mb-0.5">
-                  {HOW_IT_WORKS_STEPS[instructionStep].title}
+                  {howItWorksSteps[instructionStep].title}
                 </h3>
                 <p className="text-gray-500 leading-snug text-xs sm:text-sm min-h-[2.5rem] flex items-center">
-                  {HOW_IT_WORKS_STEPS[instructionStep].body}
+                  {howItWorksSteps[instructionStep].body}
                 </p>
                 <div className="flex items-center justify-center gap-1.5 mt-3" aria-hidden="true">
-                  {HOW_IT_WORKS_STEPS.map((step, index) => (
+                  {howItWorksSteps.map((step, index) => (
                     <span
                       key={step.title}
                       className={`h-1.5 rounded-full transition-all ${
@@ -834,7 +1113,7 @@ ${siteUrl}`
               <button
                 type="button"
                 aria-label="Next step"
-                onClick={() => setInstructionStep((step) => (step + 1) % HOW_IT_WORKS_STEPS.length)}
+                onClick={() => setInstructionStep((step) => (step + 1) % howItWorksSteps.length)}
                 className="flex-shrink-0 w-9 h-9 sm:w-10 sm:h-10 rounded-full border border-gray-200 text-gray-700 hover:bg-gray-50 flex items-center justify-center"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -861,7 +1140,7 @@ ${siteUrl}`
                   </button>
                   <button
                     type="button"
-                    onClick={() => signIn('google', { callbackUrl: '/quiz' })}
+                    onClick={() => signIn('google', { callbackUrl: `/quiz?category=${trainingCategory}` })}
                     className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3 min-h-[44px] bg-white text-gray-900 font-normal hover:bg-gray-50 transition-colors rounded-full text-sm sm:text-base border border-gray-200 cursor-pointer"
                   >
                     <svg className="w-4 h-4" viewBox="0 0 24 24" aria-hidden="true">

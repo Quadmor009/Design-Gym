@@ -1,18 +1,22 @@
 export interface Question {
   id: string
   difficulty: "beginner" | "mid" | "expert"
-  type: "image" | "typeface"
+  type: "image" | "typeface" | "prompt"
   prompt: string
   optionA: string
   optionB: string
   correctOption: "A"
   explanation: string
+  /** Used by prompt-training questions: the generated image to match. */
+  image?: string
+  /** False until A/B PNGs exist in /public. Omitted or true means the question can be served. */
+  ready?: boolean
 }
 
 export const foxQuote = "The quick brown fox jumps over the lazy dog."
 
 export const questions: Question[] = [
-  // BEGINNER LEVEL - IMAGE QUESTIONS (15 total)
+  // BEGINNER LEVEL - IMAGE QUESTIONS (30 total)
   {
     id: "layout-beg-q1",
     difficulty: "beginner",
@@ -98,8 +102,8 @@ export const questions: Question[] = [
     difficulty: "beginner",
     type: "image",
     prompt: "Which of these images is most correct?",
-    optionA: "/width thickness-beg-q9-a.png",
-    optionB: "/width thickness-beg-q9-b.png",
+    optionA: "/width-thickness-beg-q9-a.png",
+    optionB: "/width-thickness-beg-q9-b.png",
     correctOption: "A",
     explanation: "Line weight"
   },
@@ -108,8 +112,8 @@ export const questions: Question[] = [
     difficulty: "beginner",
     type: "image",
     prompt: "Which of these images is most correct?",
-    optionA: "/visual hierarchy-beg-q10-a.png",
-    optionB: "/visual hierarchy-beg-q10-b.png",
+    optionA: "/visual-hierarchy-beg-q10-a.png",
+    optionB: "/visual-hierarchy-beg-q10-b.png",
     correctOption: "A",
     explanation: "Visual hierarchy"
   },
@@ -162,6 +166,172 @@ export const questions: Question[] = [
     optionB: "/contrast-beg-q15-b.png",
     correctOption: "A",
     explanation: "Contrast"
+  },
+
+  // BEGINNER LEVEL - BRAND FIT IMAGE QUESTIONS (3)
+  {
+    id: "brandfit-beg-q16",
+    difficulty: "beginner",
+    type: "image",
+    prompt: "Stillness, distilled. A quiet retreat for the overworked mind.",
+    optionA: "/brandfit-beg-q16-a.png",
+    optionB: "/brandfit-beg-q16-b.png",
+    correctOption: "A",
+    explanation: "Brand fit"
+  },
+  {
+    id: "brandfit-beg-q17",
+    difficulty: "beginner",
+    type: "image",
+    prompt: "Chaos, but make it delicious. Snacks that refuse to sit still.",
+    optionA: "/brandfit-beg-q17-a.png",
+    optionB: "/brandfit-beg-q17-b.png",
+    correctOption: "A",
+    explanation: "Brand fit"
+  },
+  {
+    id: "brandfit-beg-q18",
+    difficulty: "beginner",
+    type: "image",
+    prompt: "Built for the 4am trade. No noise. No fluff. Just the number.",
+    optionA: "/brandfit-beg-q18-a.png",
+    optionB: "/brandfit-beg-q18-b.png",
+    correctOption: "A",
+    explanation: "Brand fit"
+  },
+
+  // BEGINNER LEVEL - NEW CATEGORY IMAGE QUESTIONS (12; beginner image pool is 30 total)
+  {
+    id: "font-pairing-beg-q41",
+    difficulty: "beginner",
+    type: "image",
+    ready: true,
+    prompt: "Which of these images is most correct?",
+    optionA: "/font-pairing-beg-q41-a.png",
+    optionB: "/font-pairing-beg-q41-b.png",
+    correctOption: "A",
+    explanation: "Font pairing"
+  },
+  {
+    id: "font-pairing-beg-q42",
+    difficulty: "beginner",
+    type: "image",
+    ready: true,
+    prompt: "Which of these images is most correct?",
+    optionA: "/font-pairing-beg-q42-a.png",
+    optionB: "/font-pairing-beg-q42-b.png",
+    correctOption: "A",
+    explanation: "Font pairing"
+  },
+  {
+    id: "letter-spacing-beg-q43",
+    difficulty: "beginner",
+    type: "image",
+    ready: true,
+    prompt: "Which of these images is most correct?",
+    optionA: "/letter-spacing-beg-q43-a.png",
+    optionB: "/letter-spacing-beg-q43-b.png",
+    correctOption: "A",
+    explanation: "Letter spacing"
+  },
+  {
+    id: "letter-spacing-beg-q44",
+    difficulty: "beginner",
+    type: "image",
+    ready: true,
+    prompt: "Which of these images is most correct?",
+    optionA: "/letter-spacing-beg-q44-a.png",
+    optionB: "/letter-spacing-beg-q44-b.png",
+    correctOption: "A",
+    explanation: "Letter spacing"
+  },
+  {
+    id: "font-weight-beg-q45",
+    difficulty: "beginner",
+    type: "image",
+    ready: true,
+    prompt: "Which of these images is most correct?",
+    optionA: "/font-weight-beg-q45-a.png",
+    optionB: "/font-weight-beg-q45-b.png",
+    correctOption: "A",
+    explanation: "Font weight"
+  },
+  {
+    id: "font-weight-beg-q46",
+    difficulty: "beginner",
+    type: "image",
+    ready: true,
+    prompt: "Which of these images is most correct?",
+    optionA: "/font-weight-beg-q46-a.png",
+    optionB: "/font-weight-beg-q46-b.png",
+    correctOption: "A",
+    explanation: "Font weight"
+  },
+  {
+    id: "color-contrast-beg-q47",
+    difficulty: "beginner",
+    type: "image",
+    ready: true,
+    prompt: "Which of these images is most correct?",
+    optionA: "/color-contrast-beg-q47-a.png",
+    optionB: "/color-contrast-beg-q47-b.png",
+    correctOption: "A",
+    explanation: "Color contrast"
+  },
+  {
+    id: "color-contrast-beg-q48",
+    difficulty: "beginner",
+    type: "image",
+    ready: true,
+    prompt: "Which of these images is most correct?",
+    optionA: "/color-contrast-beg-q48-a.png",
+    optionB: "/color-contrast-beg-q48-b.png",
+    correctOption: "A",
+    explanation: "Color contrast"
+  },
+  {
+    id: "icon-consistency-beg-q49",
+    difficulty: "beginner",
+    type: "image",
+    ready: true,
+    prompt: "Which of these images is most correct?",
+    optionA: "/icon-consistency-beg-q49-a.png",
+    optionB: "/icon-consistency-beg-q49-b.png",
+    correctOption: "A",
+    explanation: "Icon consistency"
+  },
+  {
+    id: "icon-consistency-beg-q50",
+    difficulty: "beginner",
+    type: "image",
+    ready: true,
+    prompt: "Which of these images is most correct?",
+    optionA: "/icon-consistency-beg-q50-a.png",
+    optionB: "/icon-consistency-beg-q50-b.png",
+    correctOption: "A",
+    explanation: "Icon consistency"
+  },
+  {
+    id: "button-states-beg-q51",
+    difficulty: "beginner",
+    type: "image",
+    ready: true,
+    prompt: "Which of these images is most correct?",
+    optionA: "/button-states-beg-q51-a.png",
+    optionB: "/button-states-beg-q51-b.png",
+    correctOption: "A",
+    explanation: "Button states"
+  },
+  {
+    id: "button-states-beg-q52",
+    difficulty: "beginner",
+    type: "image",
+    ready: true,
+    prompt: "Which of these images is most correct?",
+    optionA: "/button-states-beg-q52-a.png",
+    optionB: "/button-states-beg-q52-b.png",
+    correctOption: "A",
+    explanation: "Button states"
   },
 
   // BEGINNER LEVEL - TYPEFACE QUESTIONS (5 total)
@@ -243,8 +413,8 @@ export const questions: Question[] = [
     difficulty: "mid",
     type: "image",
     prompt: "Which of these images is most correct?",
-    optionA: "/curve radius consistency-med-q18-a.png",
-    optionB: "/curve radius consistency-med-q18-b.png",
+    optionA: "/curve-radius-consistency-med-q18-a.png",
+    optionB: "/curve-radius-consistency-med-q18-b.png",
     correctOption: "A",
     explanation: "Corner radius"
   },
@@ -253,8 +423,8 @@ export const questions: Question[] = [
     difficulty: "mid",
     type: "image",
     prompt: "Which of these images is most correct?",
-    optionA: "/selection type-med-q19-a.png",
-    optionB: "/selection type-med-q19-b.png",
+    optionA: "/selection-type-med-q19-a.png",
+    optionB: "/selection-type-med-q19-b.png",
     correctOption: "A",
     explanation: "Selection state"
   },
@@ -303,8 +473,8 @@ export const questions: Question[] = [
     difficulty: "mid",
     type: "image",
     prompt: "Which of these images is most correct?",
-    optionA: "/visual balance-med-q24-a.png",
-    optionB: "/visual balance-med-q24-b.png",
+    optionA: "/visual-balance-med-q24-a.png",
+    optionB: "/visual-balance-med-q24-b.png",
     correctOption: "A",
     explanation: "Visual balance"
   },
@@ -428,8 +598,8 @@ export const questions: Question[] = [
     difficulty: "expert",
     type: "image",
     prompt: "Which of these images is most correct?",
-    optionA: "/info break-exp-q28-a.png",
-    optionB: "/info break-exp-q28-a-1.png",
+    optionA: "/info-break-exp-q28-a.png",
+    optionB: "/info-break-exp-q28-a-1.png",
     correctOption: "A",
     explanation: "Information grouping"
   },
@@ -458,8 +628,8 @@ export const questions: Question[] = [
     difficulty: "expert",
     type: "image",
     prompt: "Which of these images is most correct?",
-    optionA: "/line spacing-exp-q31-a.png",
-    optionB: "/line spacing-exp-q31-b.png",
+    optionA: "/line-spacing-exp-q31-a.png",
+    optionB: "/line-spacing-exp-q31-b.png",
     correctOption: "A",
     explanation: "Line height"
   },
@@ -518,8 +688,8 @@ export const questions: Question[] = [
     difficulty: "expert",
     type: "image",
     prompt: "Which of these images is most correct?",
-    optionA: "/image quality-exp-q37-a.png",
-    optionB: "/image quality-exp-q37-b.png",
+    optionA: "/image-quality-exp-q37-a.png",
+    optionB: "/image-quality-exp-q37-b.png",
     correctOption: "A",
     explanation: "Image quality"
   },
@@ -528,8 +698,8 @@ export const questions: Question[] = [
     difficulty: "expert",
     type: "image",
     prompt: "Which of these images is most correct?",
-    optionA: "/border width-exp-q38-a.png",
-    optionB: "/border width-exp-q38-b.png",
+    optionA: "/border-width-exp-q38-a.png",
+    optionB: "/border-width-exp-q38-b.png",
     correctOption: "A",
     explanation: "Border weight"
   },
@@ -538,8 +708,8 @@ export const questions: Question[] = [
     difficulty: "expert",
     type: "image",
     prompt: "Which of these images is most correct?",
-    optionA: "/image size-exp-q39-a.png",
-    optionB: "/image size-exp-q39-b.png",
+    optionA: "/image-size-exp-q39-a.png",
+    optionB: "/image-size-exp-q39-b.png",
     correctOption: "A",
     explanation: "Image size"
   },
@@ -548,8 +718,8 @@ export const questions: Question[] = [
     difficulty: "expert",
     type: "image",
     prompt: "Which of these images is most correct?",
-    optionA: "/icon style-exp-q40-a.png",
-    optionB: "/icon style-exp-q40-b.png",
+    optionA: "/icon-style-exp-q40-a.png",
+    optionB: "/icon-style-exp-q40-b.png",
     correctOption: "A",
     explanation: "Icon style"
   },

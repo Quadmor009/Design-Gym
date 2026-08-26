@@ -1,7 +1,7 @@
 import Head from 'next/head'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
-import { useSession, signIn } from 'next-auth/react'
+import { useSession } from 'next-auth/react'
 import { useState, useEffect } from 'react'
 
 // Placeholder partner logos
@@ -22,6 +22,7 @@ export default function Home() {
   const [playerHandles, setPlayerHandles] = useState<string[]>([])
   const [loadingHandles, setLoadingHandles] = useState(true)
   const [streak, setStreak] = useState<number | null>(null)
+  const [trainingCategory, setTrainingCategory] = useState<'visual' | 'prompt'>('visual')
 
   // Redirect auth errors to the dedicated error page
   useEffect(() => {
@@ -130,30 +131,21 @@ export default function Home() {
           </Link>
         </div>
 
-        {/* Sign up / user area - top right */}
-        <div className="absolute top-6 right-4 md:right-8 lg:right-12 xl:right-16 z-50 flex items-center gap-3">
-          {streak !== null && streak > 0 && (
-            <span className="text-sm font-medium text-gray-600 bg-gray-100 px-3 py-1.5 rounded-[8px]">
-              {streak} day streak
-            </span>
-          )}
-          {status === 'authenticated' ? (
+        {status === 'authenticated' && (
+          <div className="absolute top-6 right-4 md:right-8 lg:right-12 xl:right-16 z-50 flex items-center gap-3">
+            {streak !== null && streak > 0 && (
+              <span className="text-sm font-medium text-gray-600 bg-gray-100 px-3 py-1.5 rounded-[8px]">
+                {streak} day streak
+              </span>
+            )}
             <Link
               href="/profile"
               className="hero-btn hero-btn-secondary hero-btn-sm"
             >
               Your Progress
             </Link>
-          ) : (
-            <button
-              type="button"
-              onClick={() => signIn('google', { callbackUrl: '/quiz' })}
-              className="hero-btn hero-btn-secondary hero-btn-sm"
-            >
-              Sign up
-            </button>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* Hero Section */}
         <section className="h-full px-4 md:px-8 lg:px-12 xl:px-16 relative z-10 flex flex-col items-center justify-center">
@@ -166,42 +158,39 @@ export default function Home() {
                 className="h-10 sm:h-12 md:h-16 lg:h-20 w-auto mb-3 md:mb-4"
               />
               <p className="text-sm md:text-base text-gray-600 leading-relaxed mb-6 md:mb-8 max-w-xl">
-                Sharpen your design eye with quick, side-by-side comparison rounds that train your attention to detail.
+                Two options. One that's right. Train the eye that can tell.
               </p>
-              <div className="inline-flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3">
-                <Link
-                  href="/quiz"
-                  className="hero-btn hero-btn-primary w-full sm:w-auto"
-                >
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
+              <div
+                role="radiogroup"
+                aria-label="Training category"
+                className="mb-4 inline-flex w-full max-w-md rounded-full border border-gray-200 bg-white p-1"
+              >
+                {([
+                  { id: 'visual', label: 'Visual Training' },
+                  { id: 'prompt', label: 'Prompt Training' },
+                ] as const).map((option) => (
+                  <button
+                    key={option.id}
+                    type="button"
+                    role="radio"
+                    aria-checked={trainingCategory === option.id}
+                    onClick={() => setTrainingCategory(option.id)}
+                    className={`flex-1 rounded-full px-3 py-2.5 text-sm transition-colors ${
+                      trainingCategory === option.id
+                        ? 'bg-black text-white'
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
-                    />
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                  Quick Play
-                </Link>
-                <Link
-                  href="/leaderboard"
-                  className="hero-btn hero-btn-secondary w-full sm:w-auto"
-                >
-                  View Leaderboard
-                </Link>
+                    {option.label}
+                  </button>
+                ))}
               </div>
+              <Link
+                href={`/quiz?category=${trainingCategory}`}
+                className="hero-btn hero-btn-primary w-full sm:w-auto"
+              >
+                Play
+              </Link>
             </div>
 
             {/* Central visual — 3D dumbbell */}
@@ -250,12 +239,15 @@ export default function Home() {
 
           {/* Credit - Bottom Right with filled frame - Hidden on mobile */}
           <div className="hidden sm:block absolute bottom-0 right-4 md:right-8 lg:right-12 xl:right-16 pb-8 md:pb-12 lg:pb-16 z-30">
-            <div className="bg-white/95 backdrop-blur-md px-4 py-2.5 rounded-[8px] border border-gray-300/50 shadow-md hover:shadow-lg transition-all duration-200">
-              <a href="https://www.quadmor.design" target="_blank" rel="noopener noreferrer" className="text-xs text-gray-800 font-medium tracking-wide">
-                <span className="text-gray-500">Vibe coded by</span>{' '}
-                <span className="text-black font-semibold hover:underline">Quadri Morin</span>
-              </a>
-            </div>
+            <a
+              href="https://www.quadmor.design"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block bg-white/95 backdrop-blur-md px-4 py-2.5 rounded-[8px] border border-gray-300/50 shadow-md hover:shadow-lg transition-all duration-200 text-xs font-medium tracking-wide cursor-pointer"
+            >
+              <span className="text-gray-500">Vibe coded by</span>{' '}
+              <span className="text-black font-semibold">Quadri Morin</span>
+            </a>
           </div>
       </main>
     </>

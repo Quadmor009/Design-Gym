@@ -239,12 +239,31 @@ html, body {
   will-change: transform, opacity;
 }
 
+.quiz-option-image {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  max-height: 480px;
+}
+
+@media (max-width: 767px) {
+  .quiz-option-image {
+    max-height: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .hero-marquee-track,
   .image-grid-scroll,
   .hero-dumbbell,
-  .hero-dumbbell-shadow {
+  .hero-dumbbell-shadow,
+  .quiz-compare-flicker {
     animation: none;
+  }
+
+  .quiz-compare-flicker {
+    opacity: 0.45;
   }
 
   .hero-btn,
@@ -259,6 +278,48 @@ html, body {
 /* Allow vertical scrolling on quiz page */
 body.quiz-page {
   overflow-y: auto;
+}
+
+/* Hold-to-compare overlay flicker (Can't Unsee-style blink comparator) */
+@keyframes quiz-compare-flicker {
+  0%, 49.999% {
+    opacity: 1;
+  }
+  50%, 100% {
+    opacity: 0;
+  }
+}
+
+.quiz-compare-flicker {
+  animation: quiz-compare-flicker 0.65s steps(1, end) infinite;
+}
+
+.quiz-compare-btn {
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* Room for the Next/Compare hover lift + shadow (overflow-x: hidden ancestors clip box-shadow) */
+.quiz-actions {
+  padding-bottom: 3.5rem;
+  overflow: visible;
+}
+
+.quiz-compare-btn:hover,
+.quiz-compare-btn:active {
+  transform: none;
+  box-shadow: none;
+}
+
+.hero-btn-secondary[aria-pressed="true"],
+.hero-btn-secondary[aria-pressed="true"]:hover {
+  background: #111;
+  color: #fff;
+  border-color: #111;
+  transform: none;
+  box-shadow: none;
 }
 
 /* Hide scrollbar for webkit browsers */

@@ -9,6 +9,15 @@ const nextConfig = {
       },
     ],
   },
+  async redirects() {
+    return [
+      {
+        source: '/guess-the-prompt',
+        destination: '/quiz?category=prompt',
+        permanent: false,
+      },
+    ]
+  },
 }
 
 module.exports = nextConfig
