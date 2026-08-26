@@ -826,17 +826,19 @@ ${siteUrl}`
             </div>
           </div>
 
-          <div className="mb-8 sm:mb-12">
-            <h2 className="text-lg sm:text-xl md:text-2xl font-normal text-center mb-6 sm:mb-8 px-2 text-gray-900 break-words">
+          <div className={currentQuestion.type === 'prompt' ? 'mb-4 sm:mb-6' : 'mb-8 sm:mb-12'}>
+            <h2 className={`text-lg sm:text-xl md:text-2xl font-normal text-center px-2 text-gray-900 break-words ${
+              currentQuestion.type === 'prompt' ? 'mb-4 sm:mb-5' : 'mb-6 sm:mb-8'
+            }`}>
               {currentQuestion.prompt}
             </h2>
           </div>
 
           {currentQuestion.type === 'prompt' ? (
             <>
-              <div className="mb-8 sm:mb-10 overflow-hidden rounded-3xl border border-gray-200 bg-[#F7F2EA]">
+              <div className="mb-6 sm:mb-8 mx-auto w-fit max-w-lg overflow-hidden rounded-2xl border border-gray-200 bg-[#F7F2EA]">
                 {imageFailed || !currentQuestion.image ? (
-                  <div className="min-h-[240px] sm:min-h-[320px] flex flex-col items-center justify-center px-6 py-12 text-center">
+                  <div className="w-[min(100vw-2rem,28rem)] min-h-[160px] sm:min-h-[200px] flex flex-col items-center justify-center px-6 py-10 text-center">
                     <p className="text-sm text-gray-600 mb-1">Image coming soon</p>
                     {currentQuestion.image && (
                       <p className="text-xs text-gray-400 break-all">{currentQuestion.image}</p>
@@ -846,13 +848,13 @@ ${siteUrl}`
                   <img
                     src={encodeURI(currentQuestion.image)}
                     alt="Generated image to match with a prompt"
-                    className="w-full max-w-full h-auto object-contain"
+                    className="block h-auto w-auto max-w-full max-h-[200px] sm:max-h-[240px] md:max-h-[280px] object-contain"
                     onError={() => setImageFailed(true)}
                   />
                 )}
               </div>
 
-              <div className="grid grid-cols-1 gap-3 sm:gap-4 mb-8 max-w-3xl mx-auto">
+              <div className="grid grid-cols-1 gap-3 sm:gap-4 mb-8 max-w-2xl mx-auto">
                 {(['left', 'right'] as const).map((side) => {
                   const text = side === 'left' ? shuffledOptions.leftOption : shuffledOptions.rightOption
                   return (
