@@ -556,6 +556,15 @@ ${siteUrl}`
   const leftIsCorrect = shuffledOptions.correctAnswer === 'left'
   const rightIsCorrect = shuffledOptions.correctAnswer === 'right'
 
+  const imageChoiceOutline = (side: 'left' | 'right') => {
+    if (currentQuestion.type === 'typeface') return null
+    const selected = selectedAnswer === side
+    const thisIsCorrect = side === 'left' ? leftIsCorrect : rightIsCorrect
+    if (selected) return isCorrect ? 'border-green-500' : 'border-red-500'
+    if (showExplanation && thisIsCorrect) return 'border-green-500'
+    return null
+  }
+
   return (
     <>
       <Head>
@@ -659,20 +668,16 @@ ${siteUrl}`
             </h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-6 mb-8 sm:mb-12 w-full">
+          <div
+            className={
+              currentQuestion.type === 'image'
+                ? 'grid grid-cols-1 md:grid-cols-2 gap-0 mb-8 sm:mb-12 w-full overflow-hidden rounded-3xl border border-gray-200 bg-[#F7F2EA]'
+                : 'grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-6 mb-8 sm:mb-12 w-full'
+            }
+          >
             <div
               onClick={() => handleSelect('left')}
-              className={`cursor-pointer transition-all relative group ${currentQuestion.type === 'typeface'
-                  ? ''
-                  : `border-2 ${selectedAnswer === 'left'
-                    ? isCorrect
-                      ? 'border-green-500'
-                      : 'border-red-500'
-                    : showExplanation && leftIsCorrect
-                      ? 'border-green-500'
-                      : 'border-gray-200 hover:border-gray-400'
-                  }`
-                }`}
+              className="cursor-pointer transition-all relative group"
             >
               {currentQuestion.type === 'typeface' ? (
                 <div
@@ -693,12 +698,10 @@ ${siteUrl}`
                   style={{ maxHeight: '400px' }}
                 />
               )}
-              {!showExplanation && (
-                <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all duration-200 flex items-start justify-center pt-4">
-                  <span className="text-white font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                    Click to select
-                  </span>
-                </div>
+              {imageChoiceOutline('left') && (
+                <div
+                  className={`absolute inset-0 z-20 pointer-events-none border-2 rounded-t-3xl md:rounded-tr-none md:rounded-l-3xl ${imageChoiceOutline('left')}`}
+                />
               )}
               {selectedAnswer === 'left' && (
                 <div className={`p-4 text-center font-medium ${isCorrect ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'
@@ -710,17 +713,7 @@ ${siteUrl}`
 
             <div
               onClick={() => handleSelect('right')}
-              className={`cursor-pointer transition-all relative group ${currentQuestion.type === 'typeface'
-                  ? ''
-                  : `border-2 ${selectedAnswer === 'right'
-                    ? isCorrect
-                      ? 'border-green-500'
-                      : 'border-red-500'
-                    : showExplanation && rightIsCorrect
-                      ? 'border-green-500'
-                      : 'border-gray-200 hover:border-gray-400'
-                  }`
-                }`}
+              className={`cursor-pointer transition-all relative group ${currentQuestion.type === 'typeface' ? '' : 'md:border-l md:border-gray-200'}`}
             >
               {currentQuestion.type === 'typeface' ? (
                 <div
@@ -741,12 +734,10 @@ ${siteUrl}`
                   style={{ maxHeight: '400px', maxWidth: '100%' }}
                 />
               )}
-              {!showExplanation && (
-                <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all duration-200 flex items-start justify-center pt-4">
-                  <span className="text-white font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                    Click to select
-                  </span>
-                </div>
+              {imageChoiceOutline('right') && (
+                <div
+                  className={`absolute inset-0 z-20 pointer-events-none border-2 rounded-b-3xl md:rounded-bl-none md:rounded-r-3xl ${imageChoiceOutline('right')}`}
+                />
               )}
               {selectedAnswer === 'right' && (
                 <div className={`p-4 text-center font-medium ${isCorrect ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'
@@ -758,8 +749,8 @@ ${siteUrl}`
           </div>
 
           {showExplanation && (
-            <div className="mb-8 p-6 bg-green-50 border-l-4 border-green-500">
-              <p className="text-gray-700 leading-relaxed">
+            <div className="mb-8 px-5 py-3 bg-green-50 border-l-4 border-green-500">
+              <p className="text-gray-800 font-medium">
                 {currentQuestion.explanation}
               </p>
             </div>
@@ -769,7 +760,7 @@ ${siteUrl}`
             <div className="text-center">
               <button
                 onClick={handleNext}
-                className="px-8 py-3 bg-black text-white font-normal hover:bg-gray-800 transition-colors rounded-[8px]"
+                className="hero-btn hero-btn-primary"
               >
                 Next Question
               </button>
@@ -780,58 +771,58 @@ ${siteUrl}`
 
       {/* Instruction Modal - appears over first question */}
       {showInstructionModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white p-6 sm:p-8 max-w-lg w-full mx-4 rounded-[2rem] shadow-lg max-h-[90vh] overflow-y-auto">
-            <h2 className="text-2xl font-normal mb-2 text-center text-gray-900">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white px-6 py-8 sm:px-10 sm:py-10 max-w-xl w-full rounded-[2rem] shadow-2xl max-h-[90vh] overflow-y-auto">
+            <h2 className="text-2xl font-medium tracking-tight mb-2 text-center text-gray-900">
               How Design Gym Works
             </h2>
-            <p className="text-sm text-gray-500 text-center mb-8">
+            <p className="text-sm text-gray-500 text-center mb-8 leading-relaxed">
               Sharpen your visual judgment. No sign-up required to try.
             </p>
-            
-            <div className="flex flex-col md:flex-row gap-6 sm:gap-8 md:gap-12 mb-6 sm:mb-8 justify-center items-center md:items-start">
-              <div className="flex flex-col items-center text-center w-full md:flex-1">
-                <div className="mb-3">
-                  <svg className="w-12 h-12 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-4 mb-8">
+              <div className="flex flex-col items-center text-center">
+                <div className="mb-3 w-12 h-12 rounded-full bg-gray-50 flex items-center justify-center">
+                  <svg className="w-6 h-6 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Choose</h3>
-                <p className="text-gray-700 leading-[20px] text-sm whitespace-pre-line">
-                  Pick the better<br />design.
+                <h3 className="text-base font-medium text-gray-900 mb-1">Choose</h3>
+                <p className="text-gray-500 leading-relaxed text-sm">
+                  Pick the better design.
                 </p>
               </div>
-              
-              <div className="flex flex-col items-center text-center w-full md:flex-1">
-                <div className="mb-3">
-                  <svg className="w-12 h-12 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+
+              <div className="flex flex-col items-center text-center">
+                <div className="mb-3 w-12 h-12 rounded-full bg-gray-50 flex items-center justify-center">
+                  <svg className="w-6 h-6 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M4 5h7v14H4zM13 5h7v14h-7z" />
                   </svg>
                 </div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Compare</h3>
-                <p className="text-gray-700 leading-[20px] text-sm whitespace-pre-line">
-                  Review both<br />after answering.
+                <h3 className="text-base font-medium text-gray-900 mb-1">Compare</h3>
+                <p className="text-gray-500 leading-relaxed text-sm">
+                  Review both after answering.
                 </p>
               </div>
-              
-              <div className="flex flex-col items-center text-center w-full md:flex-1">
-                <div className="mb-3">
-                  <svg className="w-12 h-12 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+
+              <div className="flex flex-col items-center text-center">
+                <div className="mb-3 w-12 h-12 rounded-full bg-gray-50 flex items-center justify-center">
+                  <svg className="w-6 h-6 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Earn</h3>
-                <p className="text-gray-700 leading-[20px] text-sm whitespace-pre-line">
-                  Correct answers<br />earn 100 coins.
+                <h3 className="text-base font-medium text-gray-900 mb-1">Earn</h3>
+                <p className="text-gray-500 leading-relaxed text-sm">
+                  Correct answers earn 100 coins.
                 </p>
               </div>
             </div>
-            
-            <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
+
+            <div className="flex flex-col sm:flex-row gap-3 justify-center items-stretch sm:items-center">
               {status === 'authenticated' ? (
                 <button
                   onClick={handleStartTraining}
-                  className="w-full sm:w-auto px-6 sm:px-8 py-3 bg-black text-white font-normal hover:bg-gray-800 transition-colors rounded-[8px] text-sm sm:text-base"
+                  className="w-full sm:w-auto px-8 py-3 min-h-[44px] bg-black text-white font-normal hover:bg-gray-800 transition-colors rounded-full text-sm sm:text-base"
                 >
                   Start Training
                 </button>
@@ -839,21 +830,27 @@ ${siteUrl}`
                 <>
                   <button
                     onClick={handleQuickPlay}
-                    className="w-full sm:w-auto px-6 sm:px-8 py-3 bg-gray-100 text-gray-900 font-normal hover:bg-gray-200 transition-colors rounded-[8px] text-sm sm:text-base border border-gray-200"
+                    className="w-full sm:w-auto px-8 py-3 min-h-[44px] bg-black text-white font-normal hover:bg-gray-800 transition-colors rounded-full text-sm sm:text-base"
                   >
                     Quick Play
                   </button>
                   <button
                     type="button"
                     onClick={() => signIn('google', { callbackUrl: '/quiz' })}
-                    className="w-full sm:w-auto px-6 sm:px-8 py-3 bg-black text-white font-normal hover:bg-gray-800 transition-colors rounded-[8px] text-sm sm:text-base text-center block cursor-pointer"
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3 min-h-[44px] bg-white text-gray-900 font-normal hover:bg-gray-50 transition-colors rounded-full text-sm sm:text-base border border-gray-200 cursor-pointer"
                   >
+                    <svg className="w-4 h-4" viewBox="0 0 24 24" aria-hidden="true">
+                      <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                      <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                      <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+                      <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+                    </svg>
                     Sign up with Google
                   </button>
                 </>
               )}
             </div>
-            <p className="text-xs text-gray-500 text-center mt-3">
+            <p className="text-xs text-gray-400 text-center mt-4 leading-relaxed">
               {status === 'authenticated'
                 ? 'Your score will be saved to the leaderboard.'
                 : 'Quick Play is free. Sign up with Google to save your score and track streaks.'}
@@ -882,7 +879,7 @@ ${siteUrl}`
                 <div className="text-center">
                   <button
                     onClick={handleProceedToNextLevel}
-                    className="w-full sm:w-auto px-6 sm:px-8 py-3 bg-black text-white font-normal hover:bg-gray-800 transition-colors rounded-[8px] text-sm sm:text-base"
+                    className="hero-btn hero-btn-primary w-full sm:w-auto text-sm sm:text-base"
                   >
                     Continue to Next Level
                   </button>
@@ -904,7 +901,7 @@ ${siteUrl}`
                 <div className="text-center">
                   <button
                     onClick={handleProceedToNextLevel}
-                    className="w-full sm:w-auto px-6 sm:px-8 py-3 bg-black text-white font-normal hover:bg-gray-800 transition-colors rounded-[8px] text-sm sm:text-base"
+                    className="hero-btn hero-btn-primary w-full sm:w-auto text-sm sm:text-base"
                   >
                     Continue to Next Level
                   </button>

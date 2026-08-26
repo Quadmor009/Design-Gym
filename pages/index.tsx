@@ -4,15 +4,6 @@ import { useRouter } from 'next/router'
 import { useSession, signIn } from 'next-auth/react'
 import { useState, useEffect } from 'react'
 
-// Landing page images only
-const COLLAGE_IMAGES = [
-  '/Landing Page Images/Landing Image 1.png',
-  '/Landing Page Images/Landing Image 2.png',
-  '/Landing Page Images/Landing Image 3.png',
-  '/Landing Page Images/Landing Image 4.png',
-  '/Landing Page Images/Landing Image 5.png',
-]
-
 // Placeholder partner logos
 const PARTNER_LOGOS = [
   { name: 'Partner 1', url: 'https://via.placeholder.com/100x40?text=Logo1' },
@@ -21,6 +12,8 @@ const PARTNER_LOGOS = [
   { name: 'Partner 4', url: 'https://via.placeholder.com/100x40?text=Logo4' },
   { name: 'Partner 5', url: 'https://via.placeholder.com/100x40?text=Logo5' },
 ]
+
+const MARQUEE_ITEMS = Array.from({ length: 8 }, (_, i) => i)
 
 export default function Home() {
   const router = useRouter()
@@ -86,10 +79,6 @@ export default function Home() {
     return () => clearInterval(interval)
   }, [playerHandles])
 
-  // Duplicate images for seamless scrolling - enough duplicates to hide start/end points
-  // With 6 sets, each set is ~16.67% of total height, so we animate through one set
-  const scrollingImages = [...COLLAGE_IMAGES, ...COLLAGE_IMAGES, ...COLLAGE_IMAGES, ...COLLAGE_IMAGES, ...COLLAGE_IMAGES, ...COLLAGE_IMAGES]
-
   return (
     <>
       <Head>
@@ -97,15 +86,51 @@ export default function Home() {
         <meta name="description" content="Practice platform where designers train their visual judgment" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
-      <main className="h-screen overflow-hidden relative" style={{ backgroundColor: '#FAF9F7', overflowX: 'hidden', overflowY: 'hidden' }}>
-        {/* Logo - top left */}
-        <div className="absolute top-6 left-4 md:left-8 lg:left-12 xl:left-16 z-50">
+      <main
+        className="h-screen overflow-hidden relative"
+        style={{
+          background: 'linear-gradient(to top, #E8DFD4 0%, #F4EFE8 32%, #FFFFFF 70%)',
+          overflowX: 'hidden',
+          overflowY: 'hidden',
+        }}
+      >
+        {/* Rolling "Design Gym" background text */}
+        <div
+          className="hero-marquee pointer-events-none absolute left-0 right-0 top-1/2 -translate-y-1/2 z-0 overflow-hidden"
+          aria-hidden="true"
+        >
+          <div className="hero-marquee-track">
+            <div className="hero-marquee-set">
+              {MARQUEE_ITEMS.map((i) => (
+                <img
+                  key={`a-${i}`}
+                  src="/hero-marquee-eurostile.svg"
+                  alt=""
+                  className="hero-marquee-word"
+                />
+              ))}
+            </div>
+            <div className="hero-marquee-set">
+              {MARQUEE_ITEMS.map((i) => (
+                <img
+                  key={`b-${i}`}
+                  src="/hero-marquee-eurostile.svg"
+                  alt=""
+                  className="hero-marquee-word"
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Logo - top center */}
+        <div className="absolute top-6 left-1/2 -translate-x-1/2 z-50">
           <Link href="/">
             <img src="/logo-brand.png" alt="Design Gym" className="h-8 md:h-10 w-auto" />
           </Link>
         </div>
 
-        {/* Sign up / user area - top right - z-50 ensures it's above fixed hero media */}
+        {/* Sign up / user area - top right */}
         <div className="absolute top-6 right-4 md:right-8 lg:right-12 xl:right-16 z-50 flex items-center gap-3">
           {streak !== null && streak > 0 && (
             <span className="text-sm font-medium text-gray-600 bg-gray-100 px-3 py-1.5 rounded-[8px]">
@@ -115,7 +140,7 @@ export default function Home() {
           {status === 'authenticated' ? (
             <Link
               href="/profile"
-              className="inline-block px-5 py-2.5 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-[8px] hover:bg-gray-50 transition-colors"
+              className="hero-btn hero-btn-secondary hero-btn-sm"
             >
               Your Progress
             </Link>
@@ -123,7 +148,7 @@ export default function Home() {
             <button
               type="button"
               onClick={() => signIn('google', { callbackUrl: '/quiz' })}
-              className="inline-block px-5 py-2.5 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-[8px] hover:bg-gray-50 transition-colors cursor-pointer"
+              className="hero-btn hero-btn-secondary hero-btn-sm"
             >
               Sign up
             </button>
@@ -131,11 +156,70 @@ export default function Home() {
         </div>
 
         {/* Hero Section */}
-        <section className="h-full px-4 md:px-8 lg:px-12 xl:px-16 py-8 md:py-12 lg:py-16 relative">
-          {/* Social Proof Strip - Bottom Left of Screen */}
-          <div className="absolute bottom-0 left-4 md:left-8 lg:left-12 xl:left-16 pb-4 sm:pb-8 md:pb-12 lg:pb-16 w-full lg:w-1/2">
+        <section className="h-full px-4 md:px-8 lg:px-12 xl:px-16 relative z-10 flex flex-col items-center justify-center">
+          <div className="flex flex-col items-center text-center w-full">
+            {/* Centered headline */}
+            <div className="flex flex-col items-center mb-5 sm:mb-6 md:mb-7">
+              <img
+                src="/wordmark.png"
+                alt="Design Gym"
+                className="h-10 sm:h-12 md:h-16 lg:h-20 w-auto mb-3 md:mb-4"
+              />
+              <p className="text-sm md:text-base text-gray-600 leading-relaxed mb-6 md:mb-8 max-w-xl">
+                Sharpen your design eye with quick, side-by-side comparison rounds that train your attention to detail.
+              </p>
+              <div className="inline-flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3">
+                <Link
+                  href="/quiz"
+                  className="hero-btn hero-btn-primary w-full sm:w-auto"
+                >
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                  Quick Play
+                </Link>
+                <Link
+                  href="/leaderboard"
+                  className="hero-btn hero-btn-secondary w-full sm:w-auto"
+                >
+                  View Leaderboard
+                </Link>
+              </div>
+            </div>
+
+            {/* Central visual — 3D dumbbell */}
+            <div className="hero-dumbbell-wrap relative z-10">
+              <img
+                src="/hero-dumbbell-3d.png?v=3"
+                alt=""
+                className="hero-dumbbell"
+              />
+              <div className="hero-dumbbell-shadow" aria-hidden="true" />
+            </div>
+          </div>
+        </section>
+
+        {/* Social Proof Strip - Bottom Left of Screen */}
+        <div className="absolute bottom-0 left-4 md:left-8 lg:left-12 xl:left-16 pb-4 sm:pb-8 md:pb-12 lg:pb-16 z-30">
             <div className="flex flex-col items-start gap-2">
-              <div className="w-full lg:w-[45vw] border-t border-gray-200 mb-2"></div>
+              <div className="w-40 sm:w-56 border-t border-gray-200 mb-2"></div>
               <p className="text-xs md:text-sm text-gray-600 font-medium">
                 110+ designers already training
               </p>
@@ -164,94 +248,6 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="h-full flex flex-col relative">
-            <div className="flex-1 flex items-center min-h-0 relative">
-              {/* Hero Content - Left Side - Aligned to left edge */}
-              <div className="flex flex-col justify-center relative min-h-0 w-full lg:w-1/2 lg:max-w-[50%]">
-                {/* Main Headline - wordmark logo */}
-                <div className="mb-1 md:mb-2">
-                  <img
-                    src="/wordmark.png"
-                    alt="Design Gym"
-                    className="h-12 sm:h-16 md:h-20 lg:h-24 xl:h-28 w-auto"
-                  />
-                </div>
-
-                {/* Supporting Paragraph */}
-                <p className="text-sm md:text-base text-gray-600 leading-relaxed mb-6 md:mb-8 max-w-xl">
-                  Sharpen your design eye with quick, side-by-side comparison rounds that train your attention to detail.
-                </p>
-
-                {/* CTA Row */}
-                <div className="flex flex-col sm:flex-row gap-3 mb-12 md:mb-16">
-                  <Link
-                    href="/quiz"
-                    className="inline-flex items-center justify-center gap-2 px-8 py-3 bg-black text-white font-normal hover:bg-gray-800 transition-colors rounded-[8px]"
-                  >
-                    <svg 
-                      className="w-5 h-5" 
-                      fill="none" 
-                      stroke="currentColor" 
-                      viewBox="0 0 24 24"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path 
-                        strokeLinecap="round" 
-                        strokeLinejoin="round" 
-                        strokeWidth={2} 
-                        d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" 
-                      />
-                      <path 
-                        strokeLinecap="round" 
-                        strokeLinejoin="round" 
-                        strokeWidth={2} 
-                        d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" 
-                      />
-                    </svg>
-                    Quick Play
-                  </Link>
-                  <Link
-                    href="/leaderboard"
-                    className="inline-flex items-center justify-center px-8 py-3 bg-white text-black font-normal hover:bg-gray-50 transition-colors rounded-[8px] border border-gray-200"
-                  >
-                    View Leaderboard
-                  </Link>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Hero Media - Right Side - Scrolling Grid Frame */}
-          <div className="hidden lg:block fixed top-0 right-0 w-1/2 h-screen overflow-hidden z-0">
-            {/* Fixed Frame - Acts as viewport */}
-            <div className="absolute inset-0 overflow-hidden">
-              {/* Scrolling Grid Container */}
-              <div className="image-grid-scroll h-full">
-                <div className="grid grid-cols-2 gap-3 md:gap-4">
-                  {scrollingImages.map((src, index) => {
-                    // Determine which column (0 or 1)
-                    const columnIndex = index % 2
-                    // Apply offset to second column (right column)
-                    const offsetClass = columnIndex === 1 ? 'column-offset' : ''
-                    
-                    return (
-                      <div
-                        key={`${src}-${index}`}
-                        className={`rounded-2xl overflow-hidden aspect-[3/4] ${offsetClass}`}
-                      >
-                        <img
-                          src={src}
-                          alt={`Design training example ${index + 1}`}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
-            </div>
-          </div>
-
           {/* Credit - Bottom Right with filled frame - Hidden on mobile */}
           <div className="hidden sm:block absolute bottom-0 right-4 md:right-8 lg:right-12 xl:right-16 pb-8 md:pb-12 lg:pb-16 z-30">
             <div className="bg-white/95 backdrop-blur-md px-4 py-2.5 rounded-[8px] border border-gray-300/50 shadow-md hover:shadow-lg transition-all duration-200">
@@ -261,7 +257,6 @@ export default function Home() {
               </a>
             </div>
           </div>
-        </section>
       </main>
     </>
   )
