@@ -5,6 +5,12 @@ import Link from 'next/link'
 import { useSession, signIn } from 'next-auth/react'
 import { questions, foxQuote, Question } from '../data/quizData'
 
+const HOW_IT_WORKS_STEPS = [
+  { title: 'Choose', body: 'Pick the better design.' },
+  { title: 'Compare', body: 'Review both after answering.' },
+  { title: 'Earn', body: 'Correct answers earn 100 coins.' },
+] as const
+
 // Configuration for questions per level - never show all questions
 const QUESTIONS_PER_LEVEL: Record<'beginner' | 'mid' | 'expert', number> = {
   beginner: 5, // Show 5 out of 20 beginner questions
@@ -147,6 +153,7 @@ export default function QuizContent() {
   const [showLevelCompleteModal, setShowLevelCompleteModal] = useState(false)
   const [completedLevel, setCompletedLevel] = useState<'beginner' | 'mid' | 'expert' | null>(null)
   const [showInstructionModal, setShowInstructionModal] = useState(true)
+  const [instructionStep, setInstructionStep] = useState(0)
   const [isQuickPlay, setIsQuickPlay] = useState(false)
   const [quickPlaySaved, setQuickPlaySaved] = useState(false)
   const [quickPlaySignUpDismissed, setQuickPlaySignUpDismissed] = useState(false)
@@ -776,46 +783,64 @@ ${siteUrl}`
             <h2 className="text-2xl font-medium tracking-tight mb-2 text-center text-gray-900">
               How Design Gym Works
             </h2>
-            <p className="text-sm text-gray-500 text-center mb-8 leading-relaxed">
+            <p className="text-sm text-gray-500 text-center mb-5 leading-relaxed">
               Sharpen your visual judgment. No sign-up required to try.
             </p>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-4 mb-8">
-              <div className="flex flex-col items-center text-center">
-                <div className="mb-3 w-12 h-12 rounded-full bg-gray-50 flex items-center justify-center">
-                  <svg className="w-6 h-6 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            <div className="flex items-center gap-1 sm:gap-2 mb-6">
+              <button
+                type="button"
+                aria-label="Previous step"
+                onClick={() => setInstructionStep((step) => (step + HOW_IT_WORKS_STEPS.length - 1) % HOW_IT_WORKS_STEPS.length)}
+                className="flex-shrink-0 w-9 h-9 sm:w-10 sm:h-10 rounded-full border border-gray-200 text-gray-700 hover:bg-gray-50 flex items-center justify-center"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+
+              <div className="flex-1 flex flex-col items-center text-center min-w-0 px-1">
+                <div className="mb-2 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gray-50 flex items-center justify-center">
+                  <svg className="w-5 h-5 sm:w-6 sm:h-6 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    {instructionStep === 0 && (
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    )}
+                    {instructionStep === 1 && (
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M4 5h7v14H4zM13 5h7v14h-7z" />
+                    )}
+                    {instructionStep === 2 && (
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    )}
                   </svg>
                 </div>
-                <h3 className="text-base font-medium text-gray-900 mb-1">Choose</h3>
-                <p className="text-gray-500 leading-relaxed text-sm">
-                  Pick the better design.
+                <h3 className="text-sm sm:text-base font-medium text-gray-900 mb-0.5">
+                  {HOW_IT_WORKS_STEPS[instructionStep].title}
+                </h3>
+                <p className="text-gray-500 leading-snug text-xs sm:text-sm min-h-[2.5rem] flex items-center">
+                  {HOW_IT_WORKS_STEPS[instructionStep].body}
                 </p>
+                <div className="flex items-center justify-center gap-1.5 mt-3" aria-hidden="true">
+                  {HOW_IT_WORKS_STEPS.map((step, index) => (
+                    <span
+                      key={step.title}
+                      className={`h-1.5 rounded-full transition-all ${
+                        index === instructionStep ? 'w-4 bg-gray-900' : 'w-1.5 bg-gray-300'
+                      }`}
+                    />
+                  ))}
+                </div>
               </div>
 
-              <div className="flex flex-col items-center text-center">
-                <div className="mb-3 w-12 h-12 rounded-full bg-gray-50 flex items-center justify-center">
-                  <svg className="w-6 h-6 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M4 5h7v14H4zM13 5h7v14h-7z" />
-                  </svg>
-                </div>
-                <h3 className="text-base font-medium text-gray-900 mb-1">Compare</h3>
-                <p className="text-gray-500 leading-relaxed text-sm">
-                  Review both after answering.
-                </p>
-              </div>
-
-              <div className="flex flex-col items-center text-center">
-                <div className="mb-3 w-12 h-12 rounded-full bg-gray-50 flex items-center justify-center">
-                  <svg className="w-6 h-6 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <h3 className="text-base font-medium text-gray-900 mb-1">Earn</h3>
-                <p className="text-gray-500 leading-relaxed text-sm">
-                  Correct answers earn 100 coins.
-                </p>
-              </div>
+              <button
+                type="button"
+                aria-label="Next step"
+                onClick={() => setInstructionStep((step) => (step + 1) % HOW_IT_WORKS_STEPS.length)}
+                className="flex-shrink-0 w-9 h-9 sm:w-10 sm:h-10 rounded-full border border-gray-200 text-gray-700 hover:bg-gray-50 flex items-center justify-center"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
             </div>
 
             <div className="flex flex-col sm:flex-row gap-3 justify-center items-stretch sm:items-center">
