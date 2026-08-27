@@ -238,8 +238,8 @@ export default function Home() {
               rel="noopener noreferrer"
               className="block bg-white/95 backdrop-blur-md px-4 py-2.5 rounded-[8px] border border-gray-300/50 text-xs font-medium tracking-wide cursor-pointer"
             >
-              <span className="text-gray-500">Vibe coded by</span>{' '}
-              <span className="text-black font-semibold">Quadri Morin</span>
+              <span className="text-gray-500">built by</span>{' '}
+              <span className="text-black font-semibold">Quadmor</span>
             </a>
           </div>
       </main>
