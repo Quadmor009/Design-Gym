@@ -189,6 +189,16 @@ export const promptGuessQuestions: PromptGuessQuestion[] = [
     explanation: "Missing texture detail",
   },
   {
+    id: "prompt-guess-q19",
+    image: "/prompt-guess-q19.png",
+    optionA:
+      "A bowl of oranges on a checkered tablecloth, rendered as an oil painting, visible brushstrokes, warm Dutch still-life lighting",
+    optionB:
+      "A bowl of oranges on a checkered tablecloth, rendered as a flat vector illustration, no shading, minimal line art",
+    correctOption: "A",
+    explanation: "Wrong art medium",
+  },
+  {
     id: "prompt-guess-q20",
     image: "/prompt-guess-q20.png",
     optionA:

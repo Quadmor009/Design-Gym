@@ -25,6 +25,8 @@ const QUESTIONS_PER_LEVEL: Record<'beginner' | 'mid' | 'expert', number> = {
   expert: 8, // Show 8 out of 20 expert questions
 }
 
+const PROMPT_QUESTIONS_PER_SESSION = 7
+
 // Required pool composition - validate that pools meet these requirements
 const REQUIRED_POOL_COMPOSITION: Record<'beginner' | 'mid' | 'expert', { image: number; typeface: number }> = {
   beginner: { image: 30, typeface: 5 },
@@ -99,7 +101,14 @@ function toPromptQuestions(): Question[] {
 // STRICT RULES: Filter by explicit difficulty field only - never infer from filenames, IDs, or indexes
 function getRandomizedQuestions(category: 'visual' | 'prompt'): Question[] {
   if (category === 'prompt') {
-    return shuffleArray(toPromptQuestions())
+    const pool = shuffleArray(toPromptQuestions())
+    if (pool.length < PROMPT_QUESTIONS_PER_SESSION) {
+      throw new Error(
+        `CRITICAL: prompt pool has only ${pool.length} questions, ` +
+        `but ${PROMPT_QUESTIONS_PER_SESSION} are required for a session.`
+      )
+    }
+    return pool.slice(0, PROMPT_QUESTIONS_PER_SESSION)
   }
 
   // First, validate all questions have explicit difficulty
@@ -178,7 +187,7 @@ export default function QuizContent() {
   // Initialize randomized questions only once using function initializer
   // This prevents reshuffling on re-render
   const [trainingCategory] = useState<'visual' | 'prompt'>(() => getTrainingCategory())
-  const [sessionQuestions] = useState<Question[]>(() => getRandomizedQuestions(trainingCategory))
+  const [sessionQuestions, setSessionQuestions] = useState<Question[]>(() => getRandomizedQuestions(trainingCategory))
   
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [selectedAnswer, setSelectedAnswer] = useState<'left' | 'right' | null>(null)
@@ -426,6 +435,9 @@ export default function QuizContent() {
   const handleStartOver = () => {
     setShowLevelCompleteModal(false)
     setCompletedLevel(null)
+    if (trainingCategory === 'prompt') {
+      setSessionQuestions(getRandomizedQuestions('prompt'))
+    }
     setCurrentQuestionIndex(0)
     setCoins(0)
     setAnsweredQuestions(new Set())
