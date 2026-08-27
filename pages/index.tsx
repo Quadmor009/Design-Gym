@@ -87,14 +87,7 @@ export default function Home() {
         <meta name="description" content="Practice platform where designers train their visual judgment" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
-      <main
-        className="h-screen overflow-hidden relative"
-        style={{
-          background: 'linear-gradient(to top, #E8DFD4 0%, #F4EFE8 32%, #FFFFFF 70%)',
-          overflowX: 'hidden',
-          overflowY: 'hidden',
-        }}
-      >
+      <main className="hero-surface h-screen overflow-hidden relative">
         {/* Rolling "Design Gym" background text */}
         <div
           className="hero-marquee pointer-events-none absolute left-0 right-0 top-1/2 -translate-y-1/2 z-0 overflow-hidden"
@@ -163,7 +156,7 @@ export default function Home() {
               <div
                 role="radiogroup"
                 aria-label="Training category"
-                className="mb-4 inline-flex w-full max-w-md rounded-full border border-gray-200 bg-white p-1"
+                className="mb-4 inline-flex w-full max-w-md rounded-full bg-white p-1"
               >
                 {([
                   { id: 'visual', label: 'Visual Training' },
