@@ -256,6 +256,16 @@ html, body {
   max-height: 480px;
 }
 
+.training-toggle-thumb {
+  transition: transform 320ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.training-toggle-option {
+  transition:
+    color 320ms cubic-bezier(0.22, 0.61, 0.36, 1),
+    background-color 180ms ease;
+}
+
 @media (max-width: 767px) {
   .quiz-option-image {
     max-height: none;
@@ -267,8 +277,14 @@ html, body {
   .image-grid-scroll,
   .hero-dumbbell,
   .hero-dumbbell-shadow,
-  .quiz-compare-flicker {
+  .quiz-compare-flicker,
+  .training-toggle-thumb {
     animation: none;
+  }
+
+  .training-toggle-thumb,
+  .training-toggle-option {
+    transition: none;
   }
 
   .quiz-compare-flicker {

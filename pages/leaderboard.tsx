@@ -48,7 +48,7 @@ export default function Leaderboard() {
       setEntries(data)
     } catch (error) {
       console.error('Error fetching leaderboard:', error)
-      setError(error instanceof Error ? error.message : 'Failed to load leaderboard')
+      setError('Leaderboard unavailable right now')
       setEntries([])
     } finally {
       setLoading(false)

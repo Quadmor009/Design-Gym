@@ -151,32 +151,42 @@ export default function Home() {
                 className="h-10 sm:h-12 md:h-16 lg:h-20 w-auto mb-3 md:mb-4"
               />
               <p className="text-sm md:text-base text-gray-600 leading-relaxed mb-6 md:mb-8 max-w-xl">
-                Two options. One that's right. Train the eye that can tell.
+                Good today, Better tomorrow. No short cuts!
               </p>
               <div
                 role="radiogroup"
-                aria-label="Training category"
-                className="mb-4 inline-flex w-full max-w-md rounded-full bg-white p-1"
+                aria-label="Reps"
+                className="relative mb-4 inline-flex w-full max-w-md rounded-full bg-white p-1"
               >
+                <span
+                  aria-hidden="true"
+                  className="training-toggle-thumb pointer-events-none absolute top-1 bottom-1 left-1 w-[calc(50%-0.25rem)] rounded-full bg-black"
+                  style={{
+                    transform: trainingCategory === 'prompt' ? 'translateX(100%)' : 'translateX(0)',
+                  }}
+                />
                 {([
-                  { id: 'visual', label: 'Visual Training' },
-                  { id: 'prompt', label: 'Prompt Training' },
-                ] as const).map((option) => (
-                  <button
-                    key={option.id}
-                    type="button"
-                    role="radio"
-                    aria-checked={trainingCategory === option.id}
-                    onClick={() => setTrainingCategory(option.id)}
-                    className={`flex-1 rounded-full px-3 py-2.5 text-sm transition-colors ${
-                      trainingCategory === option.id
-                        ? 'bg-black text-white'
-                        : 'text-gray-600 hover:text-gray-900'
-                    }`}
-                  >
-                    {option.label}
-                  </button>
-                ))}
+                  { id: 'visual', label: 'Visual Reps' },
+                  { id: 'prompt', label: 'Prompt Reps' },
+                ] as const).map((option) => {
+                  const isActive = trainingCategory === option.id
+                  return (
+                    <button
+                      key={option.id}
+                      type="button"
+                      role="radio"
+                      aria-checked={isActive}
+                      onClick={() => setTrainingCategory(option.id)}
+                      className={`training-toggle-option relative z-10 flex-1 rounded-full px-3 py-2.5 text-sm ${
+                        isActive
+                          ? 'text-white'
+                          : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                      }`}
+                    >
+                      {option.label}
+                    </button>
+                  )
+                })}
               </div>
               <Link
                 href={`/quiz?category=${trainingCategory}`}

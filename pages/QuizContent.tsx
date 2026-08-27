@@ -746,7 +746,7 @@ ${siteUrl}`
   return (
     <>
       <Head>
-        <title>{trainingCategory === 'prompt' ? 'Design Gym - Prompt Training' : 'Design Gym - Training'}</title>
+        <title>{trainingCategory === 'prompt' ? 'Design Gym - Prompt Reps' : 'Design Gym - Training'}</title>
         <meta name="description" content={trainingCategory === 'prompt' ? 'Guess which prompt generated the image' : 'Practice your visual judgment'} />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
@@ -1072,7 +1072,7 @@ ${siteUrl}`
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white px-6 py-8 sm:px-10 sm:py-10 max-w-xl w-full rounded-[2rem] shadow-2xl max-h-[90vh] overflow-y-auto">
             <h2 className="text-2xl font-medium tracking-tight mb-2 text-center text-gray-900">
-              {trainingCategory === 'prompt' ? 'How Prompt Training Works' : 'How Design Gym Works'}
+              {trainingCategory === 'prompt' ? 'How Prompt Reps Works' : 'How Design Gym Works'}
             </h2>
             <p className="text-sm text-gray-500 text-center mb-5 leading-relaxed">
               {trainingCategory === 'prompt'
