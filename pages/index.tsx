@@ -167,7 +167,7 @@ export default function Home() {
                 />
                 {([
                   { id: 'visual', label: 'Visual Reps' },
-                  { id: 'prompt', label: 'Prompt Reps' },
+                  { id: 'prompt', label: 'AI Prompt Reps' },
                 ] as const).map((option) => {
                   const isActive = trainingCategory === option.id
                   return (
@@ -178,12 +178,12 @@ export default function Home() {
                       aria-checked={isActive}
                       onClick={() => setTrainingCategory(option.id)}
                       className={`training-toggle-option relative z-10 flex-1 rounded-full px-3 py-2.5 text-sm ${
-                        isActive
-                          ? 'text-white'
-                          : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                        isActive ? 'text-white' : 'text-gray-600'
                       }`}
                     >
-                      {option.label}
+                      <span className="training-toggle-label inline-block">
+                        {option.label}
+                      </span>
                     </button>
                   )
                 })}
