@@ -37,6 +37,48 @@
   animation: coin-bounce 1.5s ease-in-out infinite;
 }
 
+@keyframes coin-fly {
+  0% {
+    transform: translate3d(0, 0, 0) scale(0.45);
+    opacity: 0.85;
+  }
+  16% {
+    transform: translate3d(calc(var(--dx) * 0.1), calc(var(--dy) * 0.06 - 36px), 0) scale(1.08);
+    opacity: 1;
+  }
+  100% {
+    transform: translate3d(var(--dx), var(--dy), 0) scale(0.38);
+    opacity: 0.12;
+  }
+}
+
+.coin-fly-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  pointer-events: none;
+}
+
+.coin-fly {
+  position: fixed;
+  display: flex;
+  width: 24px;
+  height: 24px;
+  pointer-events: none;
+  will-change: transform, opacity;
+  filter: drop-shadow(0 3px 5px rgba(217, 119, 6, 0.35));
+  animation-name: coin-fly;
+  animation-timing-function: cubic-bezier(0.22, 0.72, 0.18, 1);
+  animation-fill-mode: forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .coin-fly {
+    animation: none;
+    opacity: 0;
+  }
+}
+
 .coin-glow {
   animation: coin-bounce 1.5s ease-in-out infinite, coin-glow 2.5s ease-in-out infinite;
 }
@@ -256,6 +298,47 @@ html, body {
   max-height: 480px;
 }
 
+@keyframes quiz-cursor-label-in {
+  from {
+    opacity: 0;
+    transform: translateY(3px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.quiz-option-cursor-label {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 80;
+  pointer-events: none;
+  padding: 0.4rem 0.75rem;
+  border-radius: 999px;
+  background: #111;
+  color: #fff;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  box-shadow: 0 10px 24px rgba(17, 17, 17, 0.22);
+  will-change: transform;
+}
+
+.quiz-option-cursor-label-text {
+  display: block;
+  animation: quiz-cursor-label-in 180ms ease-out;
+}
+
+@media (hover: none), (pointer: coarse) {
+  .quiz-option-cursor-label {
+    display: none;
+  }
+}
+
 .training-toggle-thumb {
   transition: transform 320ms cubic-bezier(0.22, 0.61, 0.36, 1);
 }
@@ -310,6 +393,10 @@ html, body {
     transition: background-color 180ms ease, color 180ms ease, border-color 180ms ease;
     transform: none;
     box-shadow: none;
+  }
+
+  .quiz-option-cursor-label-text {
+    animation: none;
   }
 }
 

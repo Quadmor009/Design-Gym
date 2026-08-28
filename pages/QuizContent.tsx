@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef, type PointerEvent as ReactPointerEvent, type KeyboardEvent as ReactKeyboardEvent } from 'react'
+import { useState, useEffect, useLayoutEffect, useMemo, useRef, type CSSProperties, type PointerEvent as ReactPointerEvent, type KeyboardEvent as ReactKeyboardEvent } from 'react'
 import { createPortal } from 'react-dom'
 import Head from 'next/head'
 import Link from 'next/link'
@@ -183,6 +183,90 @@ function shuffleOptions(optionA: string, optionB: string, correctOption: "A") {
   }
 }
 
+const COIN_FLY_COUNT = 4
+const COIN_FLIGHT_MS = 680
+const COIN_STAGGER_MS = 55
+
+function CoinIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+    >
+      <circle cx="12" cy="12" r="10" fill="#F59E0B" stroke="#D97706" strokeWidth="1.5" />
+      <circle cx="12" cy="12" r="6" fill="#FCD34D" opacity="0.6" />
+      <path d="M12 8C9.79 8 8 9.79 8 12C8 14.21 9.79 16 12 16C14.21 16 16 14.21 16 12C16 9.79 14.21 8 12 8Z" fill="#F59E0B" opacity="0.3" />
+    </svg>
+  )
+}
+
+const OPTION_CURSOR_LABELS = [
+  'mhmmm...',
+  'are you sure?',
+  'final answer?',
+  'what do you think?',
+  'this one?',
+  'or this?',
+] as const
+
+type OptionCursorHover = {
+  text: string
+  x: number
+  y: number
+}
+
+function pickOptionCursorLabel(previous: string | null): string {
+  const pool = OPTION_CURSOR_LABELS.filter((label) => label !== previous)
+  return pool[Math.floor(Math.random() * pool.length)]
+}
+
+function OptionCursorLabel({ hover }: { hover: OptionCursorHover }) {
+  const elRef = useRef<HTMLDivElement>(null)
+
+  const applyPosition = (x: number, y: number) => {
+    const el = elRef.current
+    if (!el) return
+    const offset = 16
+    const pad = 10
+    const w = el.offsetWidth
+    const h = el.offsetHeight
+    let left = x + offset
+    let top = y + 14
+    if (left + w > window.innerWidth - pad) left = x - w - offset
+    if (top + h > window.innerHeight - pad) top = y - h - 10
+    if (left < pad) left = pad
+    if (top < pad) top = pad
+    el.style.transform = `translate3d(${left}px, ${top}px, 0)`
+  }
+
+  useLayoutEffect(() => {
+    applyPosition(hover.x, hover.y)
+  }, [hover])
+
+  useEffect(() => {
+    const onMove = (e: PointerEvent) => {
+      if (e.pointerType === 'touch') return
+      applyPosition(e.clientX, e.clientY)
+    }
+    window.addEventListener('pointermove', onMove)
+    return () => window.removeEventListener('pointermove', onMove)
+  }, [hover.text])
+
+  if (typeof document === 'undefined') return null
+
+  return createPortal(
+    <div ref={elRef} className="quiz-option-cursor-label" aria-hidden="true">
+      <span key={hover.text} className="quiz-option-cursor-label-text">
+        {hover.text}
+      </span>
+    </div>,
+    document.body
+  )
+}
+
 export default function QuizContent() {
   // Initialize randomized questions only once using function initializer
   // This prevents reshuffling on re-render
@@ -209,6 +293,18 @@ export default function QuizContent() {
   const [coins, setCoins] = useState(0)
   const [answeredQuestions, setAnsweredQuestions] = useState<Set<number>>(new Set())
   const [isCoinAnimating, setIsCoinAnimating] = useState(false)
+  const [coinBurstPending, setCoinBurstPending] = useState(false)
+  const [coinBurst, setCoinBurst] = useState<{ from: { x: number; y: number }; to: { x: number; y: number } } | null>(null)
+  const coinSlotRef = useRef<HTMLDivElement>(null)
+  const correctRewardRef = useRef<HTMLElement | null>(null)
+  const setCorrectRewardNode = (node: HTMLElement | null) => {
+    correctRewardRef.current = node
+  }
+  const pendingCoinAwardRef = useRef(false)
+  const coinFlightTimeoutRef = useRef<number | null>(null)
+  const coinBounceTimeoutRef = useRef<number | null>(null)
+  const [optionCursor, setOptionCursor] = useState<OptionCursorHover | null>(null)
+  const lastOptionCursorLabelRef = useRef<string | null>(null)
   
   // Time tracking
   const [startTime, setStartTime] = useState<number | null>(null)
@@ -334,6 +430,118 @@ export default function QuizContent() {
   // Check if we're at the last question
   const isLastQuestion = currentQuestionIndex === sessionQuestions.length - 1
 
+  const beginOptionCursor = (e: ReactPointerEvent<HTMLElement>) => {
+    if (showExplanation || showInstructionModal || showLevelCompleteModal || showLeaveConfirmModal) return
+    if (e.pointerType === 'touch') return
+    const text = pickOptionCursorLabel(lastOptionCursorLabelRef.current)
+    lastOptionCursorLabelRef.current = text
+    setOptionCursor({ text, x: e.clientX, y: e.clientY })
+  }
+
+  const endOptionCursor = () => setOptionCursor(null)
+
+  useEffect(() => {
+    if (showExplanation || showInstructionModal || showLevelCompleteModal || showLeaveConfirmModal) {
+      setOptionCursor(null)
+    }
+  }, [showExplanation, showInstructionModal, showLevelCompleteModal, showLeaveConfirmModal, currentQuestionIndex])
+
+  useEffect(() => {
+    const hide = () => setOptionCursor(null)
+    window.addEventListener('blur', hide)
+    return () => window.removeEventListener('blur', hide)
+  }, [])
+
+  const clearCoinFlightTimers = () => {
+    if (coinFlightTimeoutRef.current !== null) {
+      window.clearTimeout(coinFlightTimeoutRef.current)
+      coinFlightTimeoutRef.current = null
+    }
+    if (coinBounceTimeoutRef.current !== null) {
+      window.clearTimeout(coinBounceTimeoutRef.current)
+      coinBounceTimeoutRef.current = null
+    }
+  }
+
+  const grantPendingCoins = () => {
+    if (!pendingCoinAwardRef.current) return
+    pendingCoinAwardRef.current = false
+    setCoins((prevCoins) => prevCoins + 100)
+    setIsCoinAnimating(true)
+    coinBounceTimeoutRef.current = window.setTimeout(() => {
+      setIsCoinAnimating(false)
+      coinBounceTimeoutRef.current = null
+    }, 400)
+  }
+
+  const settleCoinFlight = () => {
+    clearCoinFlightTimers()
+    setCoinBurst(null)
+    setCoinBurstPending(false)
+    grantPendingCoins()
+  }
+
+  useLayoutEffect(() => {
+    if (!coinBurstPending) return
+
+    let attempts = 0
+    let raf = 0
+    let cancelled = false
+
+    const measure = () => {
+      if (cancelled) return
+      const originEl = correctRewardRef.current
+      const slotEl = coinSlotRef.current
+      if (!originEl || !slotEl) {
+        if (attempts++ < 12) {
+          raf = window.requestAnimationFrame(measure)
+          return
+        }
+        setCoinBurstPending(false)
+        grantPendingCoins()
+        return
+      }
+
+      const origin = originEl.getBoundingClientRect()
+      const slot = slotEl.getBoundingClientRect()
+      setCoinBurst({
+        from: { x: origin.left + origin.width / 2, y: origin.top + origin.height / 2 },
+        to: { x: slot.left + 18, y: slot.top + slot.height / 2 },
+      })
+      setCoinBurstPending(false)
+    }
+
+    measure()
+    return () => {
+      cancelled = true
+      window.cancelAnimationFrame(raf)
+    }
+  }, [coinBurstPending])
+
+  useEffect(() => {
+    if (!coinBurst) return
+
+    const flightMs = COIN_FLIGHT_MS + COIN_STAGGER_MS * (COIN_FLY_COUNT - 1)
+    coinFlightTimeoutRef.current = window.setTimeout(() => {
+      setCoinBurst(null)
+      grantPendingCoins()
+      coinFlightTimeoutRef.current = null
+    }, flightMs)
+
+    return () => {
+      if (coinFlightTimeoutRef.current !== null) {
+        window.clearTimeout(coinFlightTimeoutRef.current)
+        coinFlightTimeoutRef.current = null
+      }
+    }
+  }, [coinBurst])
+
+  useEffect(() => {
+    return () => {
+      clearCoinFlightTimers()
+    }
+  }, [])
+
   const handleSelect = (side: 'left' | 'right') => {
     if (!showExplanation && currentQuestion && shuffledOptions) {
       setSelectedAnswer(side)
@@ -342,17 +550,20 @@ export default function QuizContent() {
       // Determine if the selected answer is correct
       // The correct answer position is tracked in shuffledOptions.correctAnswer
       const isCorrect = side === shuffledOptions.correctAnswer
+      const awardingCoins = isCorrect && !answeredQuestions.has(currentQuestionIndex)
       
       // Track coins silently - add 100 coins for correct answer (only once per question)
-      if (isCorrect && !answeredQuestions.has(currentQuestionIndex)) {
+      if (awardingCoins) {
         setAnsweredQuestions(prev => new Set(prev).add(currentQuestionIndex))
-        setCoins(prevCoins => prevCoins + 100)
-        // Trigger coin bounce animation
-        setIsCoinAnimating(true)
-        // Remove animation class after animation completes (400ms)
-        setTimeout(() => {
-          setIsCoinAnimating(false)
-        }, 400)
+        pendingCoinAwardRef.current = true
+        const prefersReducedMotion =
+          typeof window !== 'undefined' &&
+          window.matchMedia('(prefers-reduced-motion: reduce)').matches
+        if (prefersReducedMotion) {
+          grantPendingCoins()
+        } else {
+          setCoinBurstPending(true)
+        }
       } else if (!isCorrect && !answeredQuestions.has(currentQuestionIndex)) {
         // Mark question as answered even if incorrect (to prevent double counting)
         setAnsweredQuestions(prev => new Set(prev).add(currentQuestionIndex))
@@ -364,12 +575,13 @@ export default function QuizContent() {
           setCompletedLevel('expert')
           // Don't set endTime here - let the submission useEffect handle it
           setShowLevelCompleteModal(true)
-        }, 500) // Small delay to show the explanation first
+        }, awardingCoins ? 950 : 500)
       }
     }
   }
 
   const handleNext = () => {
+    settleCoinFlight()
     setIsComparing(false)
     pointerCompareRef.current = false
     shiftCompareRef.current = false
@@ -413,6 +625,7 @@ export default function QuizContent() {
   const accuracy = totalQuestions > 0 ? Math.round((coins / maxCoins) * 100) : 0
 
   const handleProceedToNextLevel = () => {
+    settleCoinFlight()
     setShowLevelCompleteModal(false)
     setCompletedLevel(null)
     
@@ -433,6 +646,7 @@ export default function QuizContent() {
   }
 
   const handleStartOver = () => {
+    settleCoinFlight()
     setShowLevelCompleteModal(false)
     setCompletedLevel(null)
     if (trainingCategory === 'prompt') {
@@ -774,7 +988,7 @@ ${siteUrl}`
               </svg>
             )}
           </button>
-          <div className="flex items-center justify-center gap-1.5 sm:gap-2 border-2 border-amber-200 rounded-[12px] px-2.5 sm:px-4 py-1.5 sm:py-2.5 bg-gradient-to-br from-amber-50 to-yellow-50" title="Coins earned this session">
+          <div ref={coinSlotRef} className="flex items-center justify-center gap-1.5 sm:gap-2 border-2 border-amber-200 rounded-[12px] px-2.5 sm:px-4 py-1.5 sm:py-2.5 bg-gradient-to-br from-amber-50 to-yellow-50" title="Coins earned this session">
             <svg 
               key={`coin-${coins}`}
               className={`w-4 h-4 sm:w-5 sm:h-5 ${isCoinAnimating ? 'coin-animate' : ''}`}
@@ -874,6 +1088,8 @@ ${siteUrl}`
                       key={side}
                       type="button"
                       onClick={() => handleSelect(side)}
+                      onPointerEnter={beginOptionCursor}
+                      onPointerLeave={endOptionCursor}
                       disabled={showExplanation}
                       className={`text-left w-full rounded-2xl border-2 bg-white px-5 py-4 sm:px-6 sm:py-5 transition-colors ${promptChoiceOutline(side)} ${
                         showExplanation ? 'cursor-default' : 'cursor-pointer hover:border-gray-400'
@@ -883,7 +1099,10 @@ ${siteUrl}`
                         {text}
                       </p>
                       {selectedAnswer === side && (
-                        <p className={`mt-3 text-sm font-medium ${isCorrect ? 'text-green-800' : 'text-red-800'}`}>
+                        <p
+                          ref={isCorrect ? setCorrectRewardNode : undefined}
+                          className={`mt-3 text-sm font-medium ${isCorrect ? 'text-green-800' : 'text-red-800'}`}
+                        >
                           {isCorrect ? '✓ Correct +100 coins' : '✗ Your choice'}
                         </p>
                       )}
@@ -946,6 +1165,8 @@ ${siteUrl}`
             >
               <div
                 onClick={() => handleSelect('left')}
+                onPointerEnter={beginOptionCursor}
+                onPointerLeave={endOptionCursor}
                 className="cursor-pointer transition-all relative group min-w-0 overflow-hidden"
               >
                 {currentQuestion.type === 'typeface' ? (
@@ -973,8 +1194,11 @@ ${siteUrl}`
                   />
                 )}
                 {selectedAnswer === 'left' && (
-                  <div className={`p-4 text-center font-medium ${isCorrect ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'
-                    }`}>
+                  <div
+                    ref={isCorrect ? setCorrectRewardNode : undefined}
+                    className={`p-4 text-center font-medium ${isCorrect ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'
+                    }`}
+                  >
                     {isCorrect ? '✓ Correct +100 coins' : '✗ Your choice'}
                   </div>
                 )}
@@ -982,6 +1206,8 @@ ${siteUrl}`
 
               <div
                 onClick={() => handleSelect('right')}
+                onPointerEnter={beginOptionCursor}
+                onPointerLeave={endOptionCursor}
                 className={`cursor-pointer transition-all relative group min-w-0 overflow-hidden ${currentQuestion.type === 'typeface' ? '' : 'md:border-l md:border-gray-200'}`}
               >
                 {currentQuestion.type === 'typeface' ? (
@@ -1009,8 +1235,11 @@ ${siteUrl}`
                   />
                 )}
                 {selectedAnswer === 'right' && (
-                  <div className={`p-4 text-center font-medium ${isCorrect ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'
-                    }`}>
+                  <div
+                    ref={isCorrect ? setCorrectRewardNode : undefined}
+                    className={`p-4 text-center font-medium ${isCorrect ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'
+                    }`}
+                  >
                     {isCorrect ? '✓ Correct +100 coins' : '✗ Your choice'}
                   </div>
                 )}
@@ -1136,19 +1365,21 @@ ${siteUrl}`
               </button>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-3 justify-center items-stretch sm:items-center">
+            <div className="flex flex-col sm:flex-row gap-3 justify-center items-stretch sm:items-center pb-4">
               {status === 'authenticated' ? (
                 <button
+                  type="button"
                   onClick={handleStartTraining}
-                  className="w-full sm:w-auto px-8 py-3 min-h-[44px] bg-black text-white font-normal hover:bg-gray-800 transition-colors rounded-full text-sm sm:text-base"
+                  className="hero-btn hero-btn-primary w-full sm:w-auto"
                 >
                   Start Training
                 </button>
               ) : (
                 <>
                   <button
+                    type="button"
                     onClick={handleQuickPlay}
-                    className="w-full sm:w-auto px-8 py-3 min-h-[44px] bg-black text-white font-normal hover:bg-gray-800 transition-colors rounded-full text-sm sm:text-base"
+                    className="hero-btn hero-btn-primary w-full sm:w-auto"
                   >
                     Quick Play
                   </button>
@@ -1381,6 +1612,35 @@ ${siteUrl}`
             ) : null}
           </div>
         </div>
+      )}
+
+      {optionCursor && <OptionCursorLabel hover={optionCursor} />}
+
+      {coinBurst && typeof document !== 'undefined' && createPortal(
+        <div className="coin-fly-layer" aria-hidden="true">
+          {Array.from({ length: COIN_FLY_COUNT }, (_, i) => {
+            const spread = (i - (COIN_FLY_COUNT - 1) / 2) * 12
+            const dx = coinBurst.to.x - coinBurst.from.x - spread
+            const dy = coinBurst.to.y - coinBurst.from.y - (i % 2 === 0 ? 4 : -2)
+            return (
+              <span
+                key={i}
+                className="coin-fly"
+                style={{
+                  left: coinBurst.from.x - 10 + spread,
+                  top: coinBurst.from.y - 10 + (i % 2) * 5,
+                  '--dx': `${dx}px`,
+                  '--dy': `${dy}px`,
+                  animationDuration: `${COIN_FLIGHT_MS}ms`,
+                  animationDelay: `${i * COIN_STAGGER_MS}ms`,
+                } as CSSProperties}
+              >
+                <CoinIcon className="w-5 h-5 sm:w-6 sm:h-6" />
+              </span>
+            )
+          })}
+        </div>,
+        document.body
       )}
 
     </>
